@@ -1,0 +1,12 @@
+version: 3
+
+includes:
+  users:
+    taskfile: seekers/Taskfile.seekers.yaml
+
+tasks:
+  default:
+    desc: Список задач
+    cmds:
+      - task --list
+ 

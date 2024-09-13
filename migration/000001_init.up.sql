@@ -1,0 +1,8 @@
+CREATE SCHEMA IF NOT EXISTS main;
+
+CREATE TABLE IF NOT EXISTS main.seekers (
+    chat_id     BIGINT NOT NULL UNIQUE PRIMARY KEY,
+    nickname    VARCHAR(32) NOT NULL   FOREIGN KEY,
+    f_name      VARCHAR(64) NOT NULL,
+    s_name      VARCHAR(64) NOT NULL
+);
