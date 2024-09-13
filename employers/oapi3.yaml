@@ -1,0 +1,237 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: HHforURFU employers
+  description: |
+    %README.md%
+
+tags:
+  - name: get
+    x-displayName: Получение
+  - name: add
+    x-displayName: Добавление
+  - name: remove
+    x-displayName: Удаление
+  - name: update
+    x-displayName: Обновление
+
+paths:
+  "/api/employers/add":
+    post:
+      tags:
+        - add
+      summary: Добавление нового юзера в БД
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "204":
+          description: Данные добавлены в БД
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/employers/{chat_id}/remove":
+    delete:
+      tags:
+        - remove
+      summary: Удаление пользователя из БД
+      parameters:
+        - name: chat_id
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Данные удалены из БД
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+    
+  "/api/employers/get":
+    get:
+      tags:
+        - get
+      summary: Получение всех пользователей из БД
+      responses:
+        "200":
+          description: Данные пользователей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Results'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/employers/{chat_id}/get":
+    get:
+      tags:
+        - get
+      summary: Получение данных пользователя по chat_id
+      parameters:
+        - name: chat_id
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/employers/{chat_id}/update":
+    put:
+      tags:
+        - update
+      summary: Обновление информации об юзере в БД
+      parameters:
+        - name: chat_id
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        "204":
+          description: Данные добавлены в БД
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+components:
+  schemas:
+    UpdateUser:
+      type: object
+      description: Данные пользователя
+      required:
+        - nickname
+        - company
+      properties:
+        chat_id:
+          type: integer
+          format: int64
+          description: Chat_id пользователя
+          x-oapi-codegen-extra-tags:
+            db: chat_id
+        nickname:
+          type: string
+          description: nickname пользователя
+          x-oapi-codegen-extra-tags:
+            db: nickname
+        company:
+          type: string
+          description: Название компании
+          x-oapi-codegen-extra-tags:
+            db: company
+
+    User:
+      type: object
+      description: Данные пользователя
+      required:
+        - chat_id
+        - nickname
+        - company
+      properties:
+        chat_id:
+          type: integer
+          format: int64
+          description: Chat_id пользователя
+        nickname:
+          type: string
+          description: nickname пользователя
+        company:
+          type: string
+          description: Название компании
+      
+    Results:
+      type: object
+      description: Данные пользователей
+      required:
+        - employers
+      properties:
+        employers:
+          type: array
+          items:
+            description: Данные пользователей
+            $ref: '#/components/schemas/Info'
+          
+    Info:
+      type: object
+      description: Данные
+      required:
+        - chat_id
+        - nickname
+        - company
+      properties:  
+        chat_id:
+          type: integer
+          format: int64
+          description: Уникальный id чата с пользователем
+          x-oapi-codegen-extra-tags:
+            db: chat_id
+        nickname:
+          type: string
+          description: nickname пользователя
+          x-oapi-codegen-extra-tags:
+            db: nickname
+        company:
+          type: string
+          description: Имя пользователя
+          x-oapi-codegen-extra-tags:
+            db: company
+
+    Result:
+      type: object
+      description: Данные пользователя
+      required:
+        - chat_id
+        - nickname
+        - company
+      properties:
+        chat_id:
+          type: integer
+          format: int64
+          description: Уникальный id чата с пользователем
+        nickname:
+          type: string
+          description: nickname пользователя
+        company:
+          type: string
+          description: Название компании
