@@ -1,8 +1,10 @@
 version: 3
 
 includes:
-  users:
+  seekers:
     taskfile: seekers/Taskfile.seekers.yaml
+  employers:
+    taskfile: employers/Taskfile.employers.yaml
 
 tasks:
   default:

@@ -6,3 +6,9 @@ CREATE TABLE IF NOT EXISTS main.seekers (
     f_name      VARCHAR(64) NOT NULL,
     s_name      VARCHAR(64) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS main.employers (
+    chat_id     BIGINT NOT NULL UNIQUE,
+    nickname    VARCHAR(32) NOT NULL,
+    company     VARCHAR(64) NOT NULL UNIQUE  PRIMARY KEY
+);
