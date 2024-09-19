@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: HHforURFU vacancies
+  description: |
+    %README.md%
+
+tags:
+  - name: get
+    x-displayName: Получение
+  - name: add
+    x-displayName: Добавление
+  - name: remove
+    x-displayName: Удаление
+  - name: update
+    x-displayName: Обновление
+
+paths:
+  "/api/filters/add":
+    post:
+      tags:
+        - add
+      summary: Добавление нового юзера в БД
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Filters'
+      responses:
+        "204":
+          description: Данные добавлены в БД
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/filters/{vacancyId}/remove":
+    delete:
+      tags:
+        - remove
+      summary: Удаление пользователя из БД
+      parameters:
+        - name: vacancyId
+          in: path
+          description: Идентификатор вакансии
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Данные удалены из БД
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+    
+  "/api/filters/get":
+    get:
+      tags:
+        - get
+      summary: Получение всех вакансий из БД
+      responses:
+        "200":
+          description: Данные вакансий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Results'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/filters/{vacancyId}/get":
+    get:
+      tags:
+        - get
+      summary: Получение данных вакансии по vacancyId
+      parameters:
+        - name: vacancyId
+          in: path
+          description: Идентификатор вакансии
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Results'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+components:
+  schemas:
+    Filters:
+      type: object
+      description: Данные пользователя
+      required:
+        - vacancy_id
+        - tags
+      properties:
+        vacancy_id:
+          type: integer
+          format: int64
+          description: Уникальный номер вакансии
+        tags:
+          type: string
+          description: Тэг вакансии
+
+    Results:
+      type: object
+      description: Данные вакансий
+      required:
+        - tags
+      properties:
+        tags:
+          type: array
+          items:
+            description: Данные пользователей
+            $ref: '#/components/schemas/Info'
+          
+    Info:
+      type: object
+      description: Данные
+      required:
+        - vacancy_id
+        - tags
+      properties:  
+        vacancy_id:
+          type: integer
+          format: int64
+          description: Уникальный номер вакансии
+          x-oapi-codegen-extra-tags:
+            db: vacancy_id
+        tags:
+          type: string
+          description: Фильтры вакансий
+          x-oapi-codegen-extra-tags:
+            db: tags
+
+    Result:
+      type: object
+      description: Данные пользователя
+      required:
+        - chat_id
+        - nickname
+        - company
+      properties:
+        chat_id:
+          type: integer
+          format: int64
+          description: Уникальный id чата с пользователем
+        nickname:
+          type: string
+          description: nickname пользователя
+        company:
+          type: string
+          description: Название компании
