@@ -5,6 +5,10 @@ includes:
     taskfile: seekers/Taskfile.seekers.yaml
   employers:
     taskfile: employers/Taskfile.employers.yaml
+  vacancies:
+    taskfile: vacancies/Taskfile.vacancies.yaml
+  filters:
+    taskfile: filters/Taskfile.filters.yaml
 
 tasks:
   default:
