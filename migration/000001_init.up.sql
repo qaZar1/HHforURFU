@@ -24,3 +24,9 @@ CREATE TABLE IF NOT EXISTS main.filters (
     vacancy_id      BIGINT      NOT NULL,
     tags            VARCHAR(64) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS main.responses (
+    chat_id BIGINT      NOT NULL,
+    vacancy_id      BIGINT      NOT NULL,
+    status          VARCHAR(64) NOT NULL
+);

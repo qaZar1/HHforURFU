@@ -9,6 +9,8 @@ includes:
     taskfile: vacancies/Taskfile.vacancies.yaml
   filters:
     taskfile: filters/Taskfile.filters.yaml
+  responses:
+    taskfile: responses/Taskfile.responses.yaml
 
 tasks:
   default:
