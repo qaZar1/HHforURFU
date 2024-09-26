@@ -35,5 +35,5 @@ func TestBotEmployers_HandleStartCommand(t *testing.T) {
 	//}
 
 	// Остальная часть теста...
-	logrus.Print("hui")
+	logrus.Print("123")
 }
