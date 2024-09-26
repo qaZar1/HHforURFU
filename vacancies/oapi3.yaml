@@ -145,6 +145,7 @@ components:
         - company
         - title
         - description
+        - chat_id_employer
       properties:
         vacancy_id:
           type: integer
@@ -167,6 +168,12 @@ components:
           description: Описание вакансии
           x-oapi-codegen-extra-tags:
             db: description
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Описание вакансии
+          x-oapi-codegen-extra-tags:
+            db: chat_id_employer
 
     Vacancy:
       type: object
@@ -176,6 +183,7 @@ components:
         - company
         - title
         - description
+        - chat_id_employer
       properties:
         vacancy_id:
           type: integer
@@ -190,6 +198,10 @@ components:
         description:
           type: string
           description: Описание вакансии
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Уникальный ид работодателя
 
     Results:
       type: object
@@ -211,6 +223,7 @@ components:
         - company
         - title
         - description
+        - chat_id_employer
       properties:  
         vacancy_id:
           type: integer
@@ -233,6 +246,12 @@ components:
           description: Описание вакансии
           x-oapi-codegen-extra-tags:
             db: description
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Описание вакансии
+          x-oapi-codegen-extra-tags:
+            db: chat_id_employer
 
     Result:
       type: object

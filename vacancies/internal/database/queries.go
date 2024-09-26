@@ -19,7 +19,7 @@ func NewDatabase(db *sqlx.DB) *Database {
 }
 
 func (pg *Database) GetAllVacancies() ([]autogen.Info, error) {
-	const query = "SELECT vacancy_id, company, title, description FROM main.vacancies;"
+	const query = "SELECT vacancy_id, company, title, description, chat_id_employer FROM main.vacancies;"
 
 	var vacancies []autogen.Info
 	if err := pg.db.Select(&vacancies, query); err != nil {
@@ -30,7 +30,7 @@ func (pg *Database) GetAllVacancies() ([]autogen.Info, error) {
 }
 
 func (pg *Database) GetVacancyByVacancyID(vacancyId int64) (*autogen.Info, error) {
-	const query = "SELECT vacancy_id, company, title, description FROM main.vacancies WHERE vacancy_id = $1;"
+	const query = "SELECT vacancy_id, company, title, description, chat_id_employer FROM main.vacancies WHERE vacancy_id = $1;"
 
 	var vacancy autogen.Info
 	if err := pg.db.Get(&vacancy, query, vacancyId); err != nil {
@@ -40,25 +40,28 @@ func (pg *Database) GetVacancyByVacancyID(vacancyId int64) (*autogen.Info, error
 	return &vacancy, nil
 }
 
-func (pg *Database) AddVacancy(vacancy autogen.Vacancy) error {
+func (pg *Database) AddVacancy(vacancy autogen.Vacancy) (int64, error) {
 	const query = `
 INSERT INTO main.vacancies (
-	vacancy_id,
 	company,
 	title,
-	description
+	description,
+	chat_id_employer
 ) VALUES (
-	:vacancyid,
-	:company,
-	:title,
-	:description
-) ON CONFLICT (vacancy_id) DO NOTHING;`
+	$1,
+	$2,
+	$3,
+	$4
+) ON CONFLICT (vacancy_id) DO NOTHING
+RETURNING vacancy_id;`
 
-	if _, err := pg.db.NamedExec(query, vacancy); err != nil {
-		return fmt.Errorf("Invalid INSERT INTO main.vacancies: %s", err)
+	var vacancy_id int64
+	err := pg.db.QueryRowx(query, vacancy.Company, vacancy.Title, vacancy.Description, vacancy.ChatIdEmployer).Scan(&vacancy_id)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid INSERT INTO main.vacancies: %s", err)
 	}
 
-	return nil
+	return vacancy_id, nil
 }
 
 func (pg *Database) RemoveVacancy(vacancyId int64) (bool, error) {
@@ -83,6 +86,7 @@ UPDATE main.vacancies
 SET	company = :company
 	title = :title,
 	description = :description
+	chat_id_employer = :chatIdEmployer
 WHERE vacancy_id = :vacancy_id;`
 
 	exec, err := pg.db.NamedExec(query, updateVacancy)

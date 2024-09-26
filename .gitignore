@@ -3,3 +3,4 @@
 .DS_Store
 **/autogen
 **/vendor**
+.fake

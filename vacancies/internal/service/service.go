@@ -24,7 +24,7 @@ func (srv *Service) GetVacancyByVacancyID(vacancyId int64) (*autogen.Info, error
 	return srv.db.GetVacancyByVacancyID(vacancyId)
 }
 
-func (srv *Service) AddVacancy(vacancy autogen.Vacancy) error {
+func (srv *Service) AddVacancy(vacancy autogen.Vacancy) (int64, error) {
 	return srv.db.AddVacancy(vacancy)
 }
 

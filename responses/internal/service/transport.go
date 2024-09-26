@@ -8,23 +8,20 @@ import (
 	"net/http"
 
 	"github.com/Impisigmatus/service_core/utils"
-	"github.com/jmoiron/sqlx"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qaZar1/HHforURFU/responses/autogen"
 )
 
 type Transport struct {
-	srv *Service
+	srv ServiceInterface // Изменено на интерфейс
 }
 
-func NewTransport(db *sqlx.DB) autogen.ServerInterface {
+func NewTransport(srv ServiceInterface) autogen.ServerInterface {
 	return &Transport{
-		srv: NewService(db),
+		srv: srv,
 	}
 }
 
-// Добавление новой вакансии в БД
-// (POST /api/seekers/add)
 func (transport *Transport) PostApiResponsesAdd(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -32,13 +29,13 @@ func (transport *Transport) PostApiResponsesAdd(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var respons autogen.Respons
-	if err := jsoniter.Unmarshal(data, &respons); err != nil {
+	var response autogen.Response
+	if err := jsoniter.Unmarshal(data, &response); err != nil {
 		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
 		return
 	}
 
-	if err := transport.srv.db.AddResponses(respons); err != nil {
+	if err := transport.srv.AddResponses(response); err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось добавить вакансию")
 		return
 	}
@@ -48,10 +45,10 @@ func (transport *Transport) PostApiResponsesAdd(w http.ResponseWriter, r *http.R
 
 // Удаление вакансии из БД
 // (DELETE /api/seekers/{chat_id}/remove)
-func (transport *Transport) DeleteApiResponsesVacancyIdAndChatIdRemove(w http.ResponseWriter, r *http.Request, vacancyId int64, chatId int64) {
-	ok, err := transport.srv.RemoveResponses(vacancyId, chatId)
+func (transport *Transport) DeleteApiResponsesVacancyIdRemove(w http.ResponseWriter, r *http.Request, vacancyId int64) {
+	ok, err := transport.srv.RemoveResponses(vacancyId)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Пользователя не существует")
+		utils.WriteString(w, http.StatusNotFound, err, "Пользователя не существует")
 		return
 	}
 
@@ -66,8 +63,8 @@ func (transport *Transport) DeleteApiResponsesVacancyIdAndChatIdRemove(w http.Re
 
 // Получение данных вакансии по vacancy_id
 // (GET /api/seekers/{vacancy_id}/get)
-func (transport *Transport) GetApiResponsesVacancyIdAndChatIdGet(w http.ResponseWriter, r *http.Request, vacancyId int64, chatId int64) {
-	user, err := transport.srv.GetResponsesByVacancyIDAndChatID(vacancyId, chatId)
+func (transport *Transport) GetApiResponsesVacancyIdVacancyIdGet(w http.ResponseWriter, r *http.Request, vacancyId int64) {
+	user, err := transport.srv.GetResponsesByVacancyID(vacancyId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			utils.WriteNoContent(w)
@@ -81,8 +78,20 @@ func (transport *Transport) GetApiResponsesVacancyIdAndChatIdGet(w http.Response
 	utils.WriteObject(w, user)
 }
 
-// Получение всех вакансий из БД
-// (GET /api/seekers/get)
+// Set godoc
+//
+// @Router /api/seekers/get [get]
+// @Summary Получение всех откликов из БД
+// @Description Хуй
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Success 200 {object} response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
 func (transport *Transport) GetApiResponsesGet(w http.ResponseWriter, r *http.Request) {
 	users, err := transport.srv.GetAllResponses()
 	if err != nil {
@@ -99,30 +108,72 @@ func (transport *Transport) GetApiResponsesGet(w http.ResponseWriter, r *http.Re
 
 // Обновление информации о вакансии в БД
 // (PUT /api/vacancies/{vacancy_id}/update)
-func (transport *Transport) PutApiResponsesVacancyIdAndChatIdUpdate(w http.ResponseWriter, r *http.Request, vacancyId int64, chatId int64) {
+func (transport *Transport) PutApiResponsesVacancyIdUpdate(w http.ResponseWriter, r *http.Request, vacancyId int64) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
 		return
 	}
 
-	var updateRespons autogen.UpdateRespons
+	var updateRespons autogen.Response
 	if err := jsoniter.Unmarshal(data, &updateRespons); err != nil {
 		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
 		return
 	}
 
-	ok, err := transport.srv.UpdateRespons(vacancyId, chatId, updateRespons)
+	ok, err := transport.srv.UpdateRespons(vacancyId, updateRespons)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось обновить данные пользователя")
 		return
 	}
 
-	if ok {
-		utils.WriteString(w, http.StatusOK, nil, "Невозможно обновить данные о пользователе")
-		return
-	} else {
+	if !ok {
 		utils.WriteNoContent(w)
 		return
+	} else {
+		utils.WriteString(w, http.StatusNotFound, err, "Пользователь не найден")
+		return
 	}
+}
+
+func (transport *Transport) GetApiResponsesChatIdEmployerChatIdEmployerGet(w http.ResponseWriter, r *http.Request, chatIdEmployer int64) {
+	users, err := transport.srv.GetResponsesByChatIDEmployer(chatIdEmployer)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
+		return
+	}
+	if len(users) == 0 {
+		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
+		return
+	}
+
+	utils.WriteObject(w, users)
+}
+
+func (transport *Transport) GetApiResponsesChatIdChatIdGet(w http.ResponseWriter, r *http.Request, chatId int64) {
+	users, err := transport.srv.GetResponsesByChatID(chatId)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
+		return
+	}
+	if len(users) == 0 {
+		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
+		return
+	}
+
+	utils.WriteObject(w, users)
+}
+
+func (transport *Transport) GetApiResponsesVacancyIdAndChatIdEmployerGet(w http.ResponseWriter, r *http.Request, vacancyId int64, chatIdEmployer int64) {
+	users, err := transport.srv.GetResponsesByVacancyIDAndChatID(vacancyId, chatIdEmployer)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
+		return
+	}
+	if users == nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
+		return
+	}
+
+	utils.WriteObject(w, users)
 }

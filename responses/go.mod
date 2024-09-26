@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/Impisigmatus/service_core v0.0.0-20240625175248-85601fa8d3dc
 	github.com/go-chi/chi/v5 v5.1.0
+	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/json-iterator/go v1.1.12
 	github.com/oapi-codegen/runtime v1.1.1

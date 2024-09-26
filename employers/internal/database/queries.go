@@ -40,7 +40,7 @@ func (pg *Database) GetUserByChatID(chatId int64) (*autogen.Info, error) {
 	return &users, nil
 }
 
-func (pg *Database) AddUser(user autogen.User) error {
+func (pg *Database) AddUser(user autogen.User) (bool, error) {
 	const query = `
 INSERT INTO main.employers (
 	chat_id,
@@ -52,11 +52,17 @@ INSERT INTO main.employers (
 	:company
 ) ON CONFLICT (chat_id) DO NOTHING;`
 
-	if _, err := pg.db.NamedExec(query, user); err != nil {
-		return fmt.Errorf("Invalid INSERT INTO main.employers: %s", err)
+	exec, err := pg.db.NamedExec(query, user)
+	if err != nil {
+		return false, fmt.Errorf("Invalid INSERT INTO main.employers: %s", err)
 	}
 
-	return nil
+	affected, err := exec.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("Invalid affected employers: %s", err)
+	}
+
+	return affected == 0, nil
 }
 
 func (pg *Database) RemoveUser(chatId int64) (bool, error) {

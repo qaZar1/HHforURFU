@@ -5,4 +5,5 @@ DROP TABLE main.seekers;
 DROP TABLE main.employers;
 DROP TABLE main.vacancies;
 DROP TABLE main.filters;
+DROP TABLE main.responses;
 DROP SCHEMA main;

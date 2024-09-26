@@ -1,3 +1,4 @@
+// internal/service/service.go
 package service
 
 import (
@@ -10,12 +11,14 @@ type Service struct {
 	db database.Database
 }
 
+// NewService создает новый сервис
 func NewService(db *sqlx.DB) *Service {
 	return &Service{
 		db: *database.NewDatabase(db),
 	}
 }
 
+// Реализация интерфейса
 func (srv *Service) GetAllUsers() ([]autogen.Info, error) {
 	return srv.db.GetAllUsers()
 }
@@ -24,7 +27,7 @@ func (srv *Service) GetUserByChatID(chatId int64) (*autogen.Info, error) {
 	return srv.db.GetUserByChatID(chatId)
 }
 
-func (srv *Service) AddUser(user autogen.User) error {
+func (srv *Service) AddUser(user autogen.User) (bool, error) {
 	return srv.db.AddUser(user)
 }
 

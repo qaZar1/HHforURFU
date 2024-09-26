@@ -16,22 +16,38 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
-func (srv *Service) GetAllResponses() ([]autogen.Info, error) {
+func (srv *Service) GetAllResponses() ([]autogen.Response, error) {
 	return srv.db.GetAllResponses()
 }
 
-func (srv *Service) GetResponsesByVacancyIDAndChatID(vacancyId int64, chatId int64) (*autogen.Info, error) {
-	return srv.db.GetResponsesByVacancyIDAndChatID(vacancyId, chatId)
+func (srv *Service) GetResponsesByVacancyIDAndChatIDEmployer(vacancyId int64, chatIdEmployer int64) (*autogen.Response, error) {
+	return srv.db.GetResponsesByVacancyIDAndChatIDEmployer(vacancyId, chatIdEmployer)
 }
 
-func (srv *Service) AddResponses(respons autogen.Respons) error {
+func (srv *Service) AddResponses(respons autogen.Response) error {
 	return srv.db.AddResponses(respons)
 }
 
-func (srv *Service) RemoveResponses(vacancyId int64, chatId int64) (bool, error) {
-	return srv.db.RemoveResponses(vacancyId, chatId)
+func (srv *Service) RemoveResponses(vacancyId int64) (bool, error) {
+	return srv.db.RemoveResponses(vacancyId)
 }
 
-func (srv *Service) UpdateRespons(vacancyId int64, chatId int64, updateRespons autogen.UpdateRespons) (bool, error) {
-	return srv.db.UpdateResponses(vacancyId, chatId, updateRespons)
+func (srv *Service) UpdateRespons(vacancyId int64, updateRespons autogen.Response) (bool, error) {
+	return srv.db.UpdateResponses(vacancyId, updateRespons)
+}
+
+func (srv *Service) GetResponsesByChatIDEmployer(chatIdEmployer int64) ([]autogen.Response, error) {
+	return srv.db.GetResponsesByChatIDEmployer(chatIdEmployer)
+}
+
+func (srv *Service) GetResponsesByChatID(chatId int64) ([]autogen.Response, error) {
+	return srv.db.GetResponsesByChatID(chatId)
+}
+
+func (srv *Service) GetResponsesByVacancyIDAndChatID(vacancyId int64, chatId int64) (*autogen.Response, error) {
+	return srv.db.GetResponsesByVacancyIDAndChatID(vacancyId, chatId)
+}
+
+func (srv *Service) GetResponsesByVacancyID(vacancyId int64) ([]autogen.Response, error) {
+	return srv.db.GetResponsesByVacancyID(vacancyId)
 }

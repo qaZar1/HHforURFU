@@ -1,6 +1,32 @@
 version: 3
 
 tasks:
+  mock-gen:
+    desc: Генерация мок
+    vars:
+      ROOT_DIR: responses
+    cmds:
+     - mockgen -source={{.ROOT_DIR}}/internal/service/interface.go -destination={{.ROOT_DIR}}/internal/mocks/mock_service.go -package=mocks
+
+  swagger:
+    vars:
+      DOCS: responses/autogen/swagger
+    cmds: 
+     - swag init --parseDependency -d responses,responses/internal/service -o {{.DOCS}} -g main.go
+# Подготавливаем данные для подключения в docs.go
+     - cat responses/README.md | sed 's/"/\\"/g' > {{.DOCS}}/README.md
+     - awk -F/ '{print "\"" $0 "\\n\"+"}' {{.DOCS}}/README.md > {{.DOCS}}/README.data
+     - sed -i -e '1 s/^/ Description:/;' {{.DOCS}}/README.data
+     - echo "\"\"," >> {{.DOCS}}/README.data
+# Подключаем README.md в docs.go
+     - sed -e '/%README_FILE%/{' -e "r {{.DOCS}}/README.data" -e 'd' -e '}' {{.DOCS}}/docs.go > {{.DOCS}}/tmp.go
+     - mv {{.DOCS}}/tmp.go {{.DOCS}}/docs.go
+     - sed -i -e '/LeftDelim/d' {{.DOCS}}/docs.go
+     - sed -i -e '/RightDelim/d' {{.DOCS}}/docs.go
+     # need delete leftDelim in docs.go
+# Генерируем router на основе swagger спецификаций
+     - oapi-codegen --config=responses/config/codegen.yml {{.DOCS}}/swagger.yaml
+     
   autogen:
     desc: Автогенерация OpenAPI 3
     deps:

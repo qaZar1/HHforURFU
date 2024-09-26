@@ -38,12 +38,14 @@ func (transport *Transport) PostApiVacanciesAdd(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := transport.srv.db.AddVacancy(vacancy); err != nil {
+	vacancy_id, err := transport.srv.AddVacancy(vacancy)
+	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось добавить вакансию")
 		return
 	}
 
-	utils.WriteNoContent(w)
+	vacancy.VacancyId = vacancy_id
+	utils.WriteObject(w, vacancy)
 }
 
 // Удаление вакансии из БД
