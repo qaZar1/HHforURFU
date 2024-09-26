@@ -175,6 +175,7 @@ components:
         - nickname
         - f_name
         - s_name
+        - resume
       properties:
         chat_id:
           type: integer
@@ -189,6 +190,10 @@ components:
         s_name:
           type: string
           description: Фамилия пользователя
+        resume:
+          type: string
+          format: uri
+          description: Ссылка на резюме
       
     Results:
       type: object
@@ -210,6 +215,7 @@ components:
         - nickname
         - fname
         - sname
+        - resume
       properties:  
         chat_id:
           type: integer
@@ -232,6 +238,12 @@ components:
           description: Фамилия пользователя
           x-oapi-codegen-extra-tags:
             db: s_name
+        resume:
+          type: string
+          format: uri
+          description: Ссылка на резюме
+          x-oapi-codegen-extra-tags:
+            db: resume
 
     Result:
       type: object
@@ -241,6 +253,7 @@ components:
         - nickname
         - f_name
         - s_name
+        - resume
       properties:
         chat_id:
           type: integer
@@ -255,3 +268,7 @@ components:
         s_name:
           type: string
           description: Фамилия пользователя
+        resume:
+          type: string
+          format: uri
+          description: Ссылка на резюме

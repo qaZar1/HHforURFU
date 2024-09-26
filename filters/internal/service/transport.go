@@ -47,7 +47,7 @@ func (transport *Transport) PostApiFiltersAdd(w http.ResponseWriter, r *http.Req
 }
 
 // Удаление тэга из БД
-// (DELETE /api/seekers/{chat_id}/remove)
+// (DELETE /api/filter/{chat_id}/remove)
 func (transport *Transport) DeleteApiFiltersVacancyIdRemove(w http.ResponseWriter, r *http.Request, chatId int64) {
 	ok, err := transport.srv.RemoveFilters(chatId)
 	if err != nil {

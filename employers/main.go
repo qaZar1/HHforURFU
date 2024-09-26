@@ -51,17 +51,29 @@ func main() {
 	}
 
 	transport := service.NewTransport(
-		sqlx.NewDb(
-			postgres.NewPostgres(
-				postgres.Config{
-					Hostname: os.Getenv(pgHost),
-					Port:     port,
-					Database: os.Getenv(pgDB),
-					User:     os.Getenv(pgUser),
-					Password: os.Getenv(pgPassword),
-				},
-			), "pgx"),
-	)
+		service.NewService(
+			sqlx.NewDb(
+				postgres.NewPostgres(
+					postgres.Config{
+						Hostname: os.Getenv(pgHost),
+						Port:     port,
+						Database: os.Getenv(pgDB),
+						User:     os.Getenv(pgUser),
+						Password: os.Getenv(pgPassword),
+					},
+				), "pgx")))
+
+	// 	sqlx.NewDb(
+	// 		postgres.NewPostgres(
+	// 			postgres.Config{
+	// 				Hostname: os.Getenv(pgHost),
+	// 				Port:     port,
+	// 				Database: os.Getenv(pgDB),
+	// 				User:     os.Getenv(pgUser),
+	// 				Password: os.Getenv(pgPassword),
+	// 			},
+	// 		), "pgx"),
+	// )
 
 	router := http.NewServeMux()
 	router.Handle("/api/",

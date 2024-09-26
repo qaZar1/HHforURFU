@@ -1,6 +1,13 @@
 version: 3
 
 tasks:
+  mock-gen:
+    desc: Генерация мок
+    vars:
+      ROOT_DIR: employers
+    cmds:
+     - mockgen -source={{.ROOT_DIR}}/internal/service/interface.go -destination={{.ROOT_DIR}}/internal/mocks/mock_service.go -package=mocks
+
   autogen:
     desc: Автогенерация OpenAPI 3
     deps:

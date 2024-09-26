@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Player Analytics Telegram
+  description: |
+    %README.md%
+
+tags:
+  - name: add
+    x-displayName: Создание
+
+paths:
+  "/api/notify":
+    post:
+      tags:
+        - add
+      summary: Отправка оповещения
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        "204":
+          description: Успешная отправка оповещения
+        "400":
+          description: Ошибка валидации входных данных
+        "500":
+          description: Внутренняя ошибка сервиса
+
+components:
+  schemas:
+    Notification:
+      type: object
+      description: Оповещение
+      required:
+      - text
+      - chat_id_employer
+      - chat_id
+      - username
+      properties:
+        text:
+          type: string
+          description: Текст для пользователя(приняли или нет)
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: уникальный идентификатор работодателя
+        chat_id:
+          type: integer
+          format: int64
+          description: уникальный идентификатор работодателя
+        username:
+          type: string
+          description: Юзернейм пользователя

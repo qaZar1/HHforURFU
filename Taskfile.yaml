@@ -11,6 +11,8 @@ includes:
     taskfile: filters/Taskfile.filters.yaml
   responses:
     taskfile: responses/Taskfile.responses.yaml
+  telegram_seekers:
+    taskfile: telegram_seekers/Taskfile.telegram_seekers.yaml
 
 tasks:
   default:

@@ -19,7 +19,7 @@ func NewDatabase(db *sqlx.DB) *Database {
 }
 
 func (pg *Database) GetAllUsers() ([]autogen.Info, error) {
-	const query = "SELECT chat_id, nickname, f_name, s_name FROM main.seekers;"
+	const query = "SELECT chat_id, nickname, f_name, s_name, resume FROM main.seekers;"
 
 	var users []autogen.Info
 	if err := pg.db.Select(&users, query); err != nil {
@@ -30,7 +30,7 @@ func (pg *Database) GetAllUsers() ([]autogen.Info, error) {
 }
 
 func (pg *Database) GetUserByChatID(chatId int64) (*autogen.Info, error) {
-	const query = "SELECT chat_id, nickname, f_name, s_name FROM main.seekers WHERE chat_id = $1;"
+	const query = "SELECT chat_id, nickname, f_name, s_name, resume FROM main.seekers WHERE chat_id = $1;"
 
 	var users autogen.Info
 	if err := pg.db.Get(&users, query, chatId); err != nil {
@@ -46,12 +46,14 @@ INSERT INTO main.seekers (
 	chat_id,
 	nickname,
 	f_name,
-	s_name
+	s_name,
+	resume
 ) VALUES (
 	:chatid,
 	:nickname,
 	:fname,
-	:sname
+	:sname,
+	:resume
 ) ON CONFLICT (chat_id) DO NOTHING;`
 
 	if _, err := pg.db.NamedExec(query, user); err != nil {
@@ -82,7 +84,8 @@ func (pg *Database) UpdateUser(chat_id int64, updateUser autogen.UpdateUser) (bo
 UPDATE main.seekers
 SET nickname = :nickname,
 	f_name = :f_name,
-	s_name = :s_name
+	s_name = :s_name,
+	resume = :resume
 WHERE chat_id = :chat_id;`
 
 	exec, err := pg.db.NamedExec(query, updateUser)

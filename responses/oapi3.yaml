@@ -26,7 +26,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Respons'
+              $ref: '#/components/schemas/Response'
       responses:
         "204":
           description: Данные добавлены в БД
@@ -48,7 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Results'
+                $ref: '#/components/schemas/Response'
         "400":
           description: Ошибка валидации входных данных
         "401":
@@ -56,7 +56,7 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/responses/{vacancy_id}-and-{chat_id}/get":
+  "/api/responses/{vacancy_id}-and-{chat_id_employer}/get":
     get:
       tags:
         - get
@@ -69,9 +69,9 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: chat_id
+        - name: chat_id_employer
           in: path
-          description: Идентификатор чата
+          description: Идентификатор работодателя
           required: true
           schema:
             type: integer
@@ -82,7 +82,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Info'
+                $ref: '#/components/schemas/Response'
         "400":
           description: Ошибка валидации входных данных
         "401":
@@ -90,7 +90,65 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/responses/{vacancy_id}-and-{chat_id}/update":
+  "/api/responses/chat_id_employer/{chat_id_employer}/get":
+    get:
+      tags:
+        - get
+      summary: Получение данных вакансии по vacancy_id
+      parameters:
+        - name: chat_id_employer
+          in: path
+          description: Идентификатор работодателя
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Response'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+  
+  "/api/responses/chat_id/{chat_id}/get":
+    get:
+      tags:
+        - get
+      summary: Получение данных вакансии по vacancy_id
+      parameters:
+        - name: chat_id
+          in: path
+          description: Идентификатор работодателя
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Response'
+        "400":
+          description: Ошибка валидации входных данных
+        "401":
+          description: Ошибка авторизации
+        "500":
+          description: Внутренняя ошибка сервиса
+
+  "/api/responses/{vacancy_id}/update":
     put:
       tags:
         - update
@@ -103,19 +161,12 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: chat_id
-          in: path
-          description: Идентификатор чата
-          required: true
-          schema:
-            type: integer
-            format: int64
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateRespons'
+              $ref: '#/components/schemas/Response'
       responses:
         "204":
           description: Данные добавлены в БД
@@ -126,7 +177,7 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/responses/{vacancy_id}-and-{chat_id}/remove":
+  "/api/responses/{vacancy_id}/remove":
     delete:
       tags:
         - remove
@@ -135,13 +186,6 @@ paths:
         - name: vacancy_id
           in: path
           description: Идентификатор вакансии
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: chat_id
-          in: path
-          description: Идентификатор чата
           required: true
           schema:
             type: integer
@@ -156,15 +200,43 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
+  "/api/responses/vacancy_id/{vacancy_id}/get":
+      get:
+        tags:
+          - get
+        summary: Получение данных вакансии по vacancy_id
+        parameters:
+          - name: vacancy_id
+            in: path
+            description: Идентификатор вакансии
+            required: true
+            schema:
+              type: integer
+              format: int64
+        responses:
+          "200":
+            description: Данные пользователя
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Response'
+          "400":
+            description: Ошибка валидации входных данных
+          "401":
+            description: Ошибка авторизации
+          "500":
+            description: Внутренняя ошибка сервиса
+
 components:
   schemas:
-    UpdateRespons:
+    Response:
       type: object
       description: Данные вакансии
       required:
         - vacancy_id
         - chat_id
         - status
+        - chat_id_employer
       properties:
         vacancy_id:
           type: integer
@@ -183,80 +255,9 @@ components:
           description: Статус ответа
           x-oapi-codegen-extra-tags:
             db: status
-
-    Respons:
-      type: object
-      description: Данные пользователя
-      required:
-        - vacancy_id
-        - chat_id
-        - status
-      properties:
-        vacancy_id:
+        chat_id_employer:
           type: integer
           format: int64
-          description: Уникальный номер вакансии
-        chat_id:
-          type: integer
-          format: int64
-          description: Уникальный номер чата
-        status:
-          type: string
-          description: Статус вакансии
-
-    Results:
-      type: object
-      description: Данные ответов
-      required:
-        - responses
-      properties:
-        responses:
-          type: array
-          items:
-            description: Данные ответов
-            $ref: '#/components/schemas/Info'
-          
-    Info:
-      type: object
-      description: Данные
-      required:
-        - vacancy_id
-        - chat_id
-        - status
-      properties:  
-        vacancy_id:
-          type: integer
-          format: int64
-          description: Уникальный номер вакансии
+          description: Уникальный номер чата с работодателем
           x-oapi-codegen-extra-tags:
-            db: vacancy_id
-        chat_id:
-          type: integer
-          format: int64
-          description: Название компании
-          x-oapi-codegen-extra-tags:
-            db: chat_id
-        status:
-          type: string
-          description: Статус вакансии
-          x-oapi-codegen-extra-tags:
-            db: status
-
-    Result:
-      type: object
-      description: Данные пользователя
-      required:
-        - chat_id
-        - nickname
-        - company
-      properties:
-        chat_id:
-          type: integer
-          format: int64
-          description: Уникальный id чата с пользователем
-        nickname:
-          type: string
-          description: nickname пользователя
-        company:
-          type: string
-          description: Название компании
+            db: chat_id_employer
