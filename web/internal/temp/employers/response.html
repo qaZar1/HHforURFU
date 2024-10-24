@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/responseForEmployers.css">
+    <title>Подробная информация об отклике</title>
+</head>
+<body>
+    <div class="header">
+        <h1 onclick="window.location.href='/employers'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='/home'">Сайт для соискателей</button>
+            <button onclick="window.location.href='/employers/responses'">Отклики</button>
+            <button onclick="window.location.href='/employers/vacancies'">Мои Вакансии</button>
+        </nav>
+    </div>
+    <div class="container">
+        <div class="vacancy-details">
+            <h2>Вакансия: {{ .Vacancy.Title }}</h2>
+            <p><strong>Компания:</strong> {{ .Vacancy.Company }}</p>
+            <p><strong>Описание:</strong> {{ .Vacancy.Description }}</p>
+            <div class="tag-container">
+                {{ range .Vacancy.Tags }}
+                    <span class="tag">{{ . }}</span>
+                {{ end }}
+            </div>
+        </div>
+        <div class="seeker-details">
+            <h2>Информация о соискателе</h2>
+            <p><strong>Имя:</strong> {{.Seeker.FirstName}}</p>
+            <p><strong>Ссылка на резюме:</strong> <a href="{{.Seeker.Resume}}" target="_blank">ссылка</a></p>
+            <p><strong>Статус отклика:</strong> {{.Response.Status}}</p>
+        </div>   
+        <div class="chat">
+            {{ if or (eq .Response.Status "Ожидает ответа") (eq .Response.Status "Принято") }}
+            <h3>Чат с соискателем</h3>
+            <div class="chat-messages" id="chat-messages">
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="Введите сообщение...">
+                <button id="chat-button">Отправить</button>
+            </div>
+            {{ else }}
+            <p>Чат недоступен, так как отклик был отклонён.</p>
+            {{ end }}
+        </div>    
+        {{ if or (eq .Response.Status "Ожидает ответа") }}
+        <div class="button-container">
+            <button class="accept-button" id="accept" method="PUT" action="/acceptResponse">Принять</button>
+            <button class="refuse-button" id="refuse" method="PUT" action="/refuseResponse">Отказать</button>
+        </div>
+        {{ end }}
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/authEmployers.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken();
+        });
+
+        // Инициализация WebSocket-соединения
+        const socket = new WebSocket('ws://localhost:8006/ws?user_id={{.Response.EmployerID}}&user_type=employer&response_id={{.Response.RespID}}');
+
+        const chatInput = document.getElementById('chat-input');
+        const chatButton = document.getElementById('chat-button');
+        const chatMessages = document.getElementById('chat-messages');
+
+        // Обработка входящих сообщений от WebSocket-сервера
+        socket.addEventListener('message', function (event) {
+            const message = JSON.parse(event.data);
+            const isSenderSeeker = message.sender_type === 'seeker';
+            appendMessage(isSenderSeeker ? 'Соискатель' : 'Вы', message.text);
+        });
+
+        // Отправка сообщения по нажатию на кнопку
+        chatButton.addEventListener('click', function () {
+            const text = chatInput.value;
+            if (text !== '') {
+                const message = {
+                    response_id: Number('{{.Response.RespID}}'),
+                    sender_type: 'employer',
+                    sender_id: Number('{{.Response.EmployerID}}'),
+                    receiver_type: 'seeker',
+                    receiver_id: Number('{{.Seeker.ID}}'),
+                    text: text
+                };
+                socket.send(JSON.stringify(message));
+                appendMessage('Вы', text);
+                chatInput.value = '';
+            }
+        });
+
+        // Функция для отображения сообщения в чате
+        function appendMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+            messageElement.innerHTML = `<p><strong>${sender}:</strong> ${message}</p>`;
+            chatMessages.appendChild(messageElement);
+            scrollToBottom();
+        }
+
+        // Функция для прокрутки чата к последнему сообщению
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Прокрутка чата вниз при загрузке страницы
+        window.onload = function() {
+            scrollToBottom();
+        };
+
+        document.getElementById('accept').addEventListener('click', async function(event) {
+            event.preventDefault();
+
+            const path = window.location.pathname;
+
+            // Регулярное выражение для извлечения ID из формата /response/id-{id}
+            const regex = /\/response\/id-(\d+)/;
+
+            const match = path.match(regex);
+
+            const formData = new FormData();
+            formData.append('id', match[1]);
+
+            try {
+                // Отправляем данные на сервер через Fetch API
+                const response = await fetch('/acceptResponse', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = window.location.href;
+                } else {
+                    // Если произошла ошибка, показываем сообщение
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+
+        document.getElementById('refuse').addEventListener('click', async function(event) {
+            event.preventDefault();
+
+            const path = window.location.pathname;
+
+            // Регулярное выражение для извлечения ID из формата /response/id-{id}
+            const regex = /\/response\/id-(\d+)/;
+
+            const match = path.match(regex);
+
+            const formData = new FormData();
+            formData.append('id', match[1]);
+
+            try {
+                // Отправляем данные на сервер через Fetch API
+                const response = await fetch('/refuseResponse', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = window.location.href;
+                } else {
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

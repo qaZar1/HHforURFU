@@ -1,118 +1,161 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/Impisigmatus/service_core/utils"
+	validator "github.com/go-playground/validator/v10"
+	"github.com/jmoiron/sqlx"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/qaZar1/HHforURFU/employers/autogen"
+	"github.com/qaZar1/HHforURFU/employers/autogen/server"
+	"github.com/qaZar1/HHforURFU/employers/internal/infrastructure"
+	"github.com/qaZar1/HHforURFU/employers/internal/models"
 )
 
 type Transport struct {
-	srv ServiceInterface // Изменено на интерфейс
+	srv      *Service
+	infra    *infrastructure.Infrastructure
+	validate *validator.Validate
 }
 
-func NewTransport(srv ServiceInterface) autogen.ServerInterface {
+func NewTransport(db *sqlx.DB, expiresIn int) server.ServerInterface {
 	return &Transport{
-		srv: srv,
+		srv:      NewService(db),
+		infra:    infrastructure.New(expiresIn),
+		validate: validator.New(),
 	}
 }
 
-func (transport *Transport) PostApiEmployersAdd(w http.ResponseWriter, r *http.Request) {
-	data, err := io.ReadAll(r.Body)
+// Set godoc
+//
+// @Router /api/registerEmployer [post]
+// @Summary Регистрация работодателя
+// @Description При обращении, регистрируется работодатель
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Param	request	body	employer	true	"Данные о работодателе"
+//
+// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PostApiRegisterEmployer(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
-	var user autogen.User
-	if err := jsoniter.Unmarshal(data, &user); err != nil {
-		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
+	var employer models.Employer
+	if err := jsoniter.Unmarshal(body, &employer); err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Can not unmarshal body")
 		return
 	}
 
-	ok, err := transport.srv.AddUser(user)
+	ok, err := transport.srv.RegisterEmployer(employer)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось добавить пользователя")
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
 	if !ok {
-		utils.WriteString(w, http.StatusConflict, err, "Пользователь уже существует")
+		utils.WriteString(w, http.StatusBadRequest, err, "Данный пользователь уже существует!")
 		return
 	}
 
 	utils.WriteNoContent(w)
 }
 
-func (transport *Transport) DeleteApiEmployersChatIdRemove(w http.ResponseWriter, r *http.Request, chatId int64) {
-	ok, err := transport.srv.RemoveUser(chatId)
+// Set godoc
+//
+// @Router /api/checkEmployer/{employer_id} [get]
+// @Summary Проверка, существует ли работодатель
+// @Description При обращении, проверятся, сущестувет ли работодатель
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Param	employer_id	path	int	true	"Username работодателя"
+//
+// @Success 200 {object} employer "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiCheckEmployerEmployerId(w http.ResponseWriter, r *http.Request, employerID int) {
+	employer, err := transport.srv.CheckEmployer(int64(employerID))
 	if err != nil {
-		utils.WriteString(w, http.StatusNotFound, err, "Пользователя не существует")
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
-	if ok {
-		utils.WriteNoContent(w)
-	} else {
-		utils.WriteString(w, http.StatusNotFound, nil, "Пользователь не найден")
-	}
+	utils.WriteObject(w, employer)
 }
 
-func (transport *Transport) GetApiEmployersChatIdGet(w http.ResponseWriter, r *http.Request, chatId int64) {
-	user, err := transport.srv.GetUserByChatID(chatId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteNoContent(w)
-			return
-		}
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить пользователя")
+// Set godoc
+//
+// @Router /api/loginEmployer [get]
+// @Summary Получение токена
+// @Description Генерирует JWT токен
+//
+// @Tags Authentication
+//
+// @Produce application/json
+//
+// @Success 200 {object} token_response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiLoginEmployer(w http.ResponseWriter, r *http.Request) {
+	username, _, _ := r.BasicAuth()
+	payload := models.Payload{
+		Username: username,
+	}
+	if err := transport.validate.Struct(payload); err != nil {
+		utils.WriteString(w, http.StatusBadRequest, err, "invalid request")
 		return
 	}
 
-	utils.WriteObject(w, user)
+	claims := transport.infra.GetClaims(payload.Username)
+	signed, err := transport.infra.GetSignedToken(claims)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "invalid token")
+		return
+	}
+
+	utils.WriteObject(w, &models.TokenResponse{
+		AccessToken: signed,
+		ExpiresIn:   18000,
+		TokenType:   "Bearer",
+	})
 }
 
-func (transport *Transport) GetApiEmployersGet(w http.ResponseWriter, r *http.Request) {
-	users, err := transport.srv.GetAllUsers()
+// Set godoc
+//
+// @Router /api/checkEmployerByUsername/{username} [get]
+// @Summary Проверка, какой id у работодателя с данным username
+// @Description При обращении, проверятся, сущестувет ли работодатель
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Param	username	path	string	true	"Username работодателя"
+//
+// @Success 200 {object} employer "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiCheckEmployerByUsernameUsername(w http.ResponseWriter, r *http.Request, username string) {
+	employer, err := transport.srv.CheckEmployerByUsername(username)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить пользователей")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteNoContent(w)
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
-	utils.WriteObject(w, users)
-}
-
-func (transport *Transport) PutApiEmployersChatIdUpdate(w http.ResponseWriter, r *http.Request, chatId int64) {
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
-		return
-	}
-
-	var updateUser autogen.UpdateUser
-	if err := jsoniter.Unmarshal(data, &updateUser); err != nil {
-		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
-		return
-	}
-
-	ok, err := transport.srv.UpdateUser(chatId, updateUser)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось обновить данные пользователя")
-		return
-	}
-
-	if ok {
-		utils.WriteNoContent(w)
-	} else {
-		utils.WriteString(w, http.StatusNotFound, nil, "Пользователь не найден")
-	}
+	utils.WriteObject(w, employer)
 }

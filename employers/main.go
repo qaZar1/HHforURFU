@@ -14,10 +14,13 @@ import (
 
 	"github.com/Impisigmatus/service_core/middlewares"
 	"github.com/Impisigmatus/service_core/postgres"
+	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/employers/autogen"
+	"github.com/qaZar1/HHforURFU/employers/autogen/server"
 	"github.com/qaZar1/HHforURFU/employers/internal/service"
 	"github.com/sirupsen/logrus"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func init() {
@@ -32,6 +35,11 @@ func init() {
 	})
 }
 
+// @title Authentication API
+// @version 3.0
+// @description %README_FILE%
+// @host localhost:8001
+// @BasePath /api
 func main() {
 	const (
 		base       = 10
@@ -51,38 +59,30 @@ func main() {
 	}
 
 	transport := service.NewTransport(
-		service.NewService(
-			sqlx.NewDb(
-				postgres.NewPostgres(
-					postgres.Config{
-						Hostname: os.Getenv(pgHost),
-						Port:     port,
-						Database: os.Getenv(pgDB),
-						User:     os.Getenv(pgUser),
-						Password: os.Getenv(pgPassword),
-					},
-				), "pgx")))
+		sqlx.NewDb(
+			postgres.NewPostgres(
+				postgres.Config{
+					Hostname: os.Getenv(pgHost),
+					Port:     port,
+					Database: os.Getenv(pgDB),
+					User:     os.Getenv(pgUser),
+					Password: os.Getenv(pgPassword),
+				},
+			), "pgx"),
+		18000,
+	)
 
-	// 	sqlx.NewDb(
-	// 		postgres.NewPostgres(
-	// 			postgres.Config{
-	// 				Hostname: os.Getenv(pgHost),
-	// 				Port:     port,
-	// 				Database: os.Getenv(pgDB),
-	// 				User:     os.Getenv(pgUser),
-	// 				Password: os.Getenv(pgPassword),
-	// 			},
-	// 		), "pgx"),
-	// )
-
-	router := http.NewServeMux()
-	router.Handle("/api/",
-		middlewares.Use(middlewares.Use(autogen.Handler(transport),
-			middlewares.Authorization(strings.Split(os.Getenv(auth), ","))),
+	router := chi.NewRouter()
+	router.Handle("/api/*",
+		middlewares.Use(
+			middlewares.Use(
+				server.Handler(transport),
+				middlewares.Authorization(strings.Split(os.Getenv(auth), ",")),
+			),
 			middlewares.Logger(),
 		),
 	)
-
+	router.Get("/swagger/*", httpSwagger.Handler())
 	server := &http.Server{
 		Addr:    os.Getenv(address),
 		Handler: router,

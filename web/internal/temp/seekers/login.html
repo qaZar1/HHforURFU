@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/login.css">
+    <title>Вход</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Вход</h2>
+        <form id="loginForm" method="GET" action="/submitToLogin">
+            <input type="text" placeholder="Никнейм" id="username" name="username" required>
+            <input type="password" placeholder="Пароль" id="password" id="password" required>
+            <div class="seeker">
+                <button type="submit" class="button-seeker">Вход</button>
+                <button onclick="window.location.href='/register'" class="button-seeker">Регистрация</button>
+            </div>
+        </form>
+        <button onclick="window.location.href='/loginEmployers'">Вход для работодателя</button>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Собираем данные из формы
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            console.log(username)
+            console.log(password)
+            // Создаем объект FormData для отправки данных на сервер
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            
+
+            try {
+                // Отправляем данные на сервер через Fetch API
+                const response = await fetch('/submitToLogin', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    var data = await response.json();
+                    var accessToken = data.access_token;
+                    var expiresIn = data.expires_in;
+                    var tokenType = data.token_type;
+
+                    var expiresDate = new Date(Date.now() + expiresIn * 2000).toUTCString(); // преобразуем в строку
+
+                    // Записываем токен в куки
+                    document.cookie = `token=${accessToken}; expires=${expiresDate}; path=/; secure; samesite=strict`;
+                    document.cookie = `token_expires=${expiresDate}; expires=${expiresDate}; path=/; secure; samesite=strict`;
+                    document.cookie = `username=${username}; expires=${expiresDate}; path=/; secure; samesite-strict`;
+
+                    // Перенаправляем на домашнюю страницу
+                    window.location.href = '/home';
+                } else {
+                    // Если произошла ошибка, показываем сообщение
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

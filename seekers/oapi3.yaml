@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   version: 1.0.0
-  title: HHforURFU seekers
+  title: HHforURFU vacancies
   description: |
     %README.md%
 
@@ -16,7 +16,7 @@ tags:
     x-displayName: Обновление
 
 paths:
-  "/api/seekers/add":
+  "/api/vacancies/add":
     post:
       tags:
         - add
@@ -26,7 +26,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/Vacancy'
       responses:
         "204":
           description: Данные добавлены в БД
@@ -37,15 +37,15 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/seekers/{chat_id}/remove":
+  "/api/vacancies/{vacancy_id}/remove":
     delete:
       tags:
         - remove
       summary: Удаление пользователя из БД
       parameters:
-        - name: chat_id
+        - name: vacancy_id
           in: path
-          description: Идентификатор пользователя
+          description: Идентификатор вакансии
           required: true
           schema:
             type: integer
@@ -60,14 +60,14 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
     
-  "/api/seekers/get":
+  "/api/vacancies/get":
     get:
       tags:
         - get
-      summary: Получение всех пользователей из БД
+      summary: Получение всех вакансий из БД
       responses:
         "200":
-          description: Данные пользователей
+          description: Данные вакансий
           content:
             application/json:
               schema:
@@ -79,15 +79,15 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/seekers/{chat_id}/get":
+  "/api/vacancies/{vacancy_id}/get":
     get:
       tags:
         - get
-      summary: Получение данных пользователя по chat_id
+      summary: Получение данных вакансии по vacancy_id
       parameters:
-        - name: chat_id
+        - name: vacancy_id
           in: path
-          description: Идентификатор пользователя
+          description: Идентификатор вакансии
           required: true
           schema:
             type: integer
@@ -98,7 +98,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Result'
+                $ref: '#/components/schemas/Info'
         "400":
           description: Ошибка валидации входных данных
         "401":
@@ -106,15 +106,15 @@ paths:
         "500":
           description: Внутренняя ошибка сервиса
 
-  "/api/seekers/{chat_id}/update":
+  "/api/vacancies/{vacancy_id}/update":
     put:
       tags:
         - update
-      summary: Обновление информации об юзере в БД
+      summary: Обновление информации о вакансии в БД
       parameters:
-        - name: chat_id
+        - name: vacancy_id
           in: path
-          description: Идентификатор пользователя
+          description: Идентификатор вакансии
           required: true
           schema:
             type: integer
@@ -124,7 +124,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUser'
+              $ref: '#/components/schemas/UpdateVacancy'
       responses:
         "204":
           description: Данные добавлены в БД
@@ -137,71 +137,79 @@ paths:
 
 components:
   schemas:
-    UpdateUser:
+    UpdateVacancy:
       type: object
-      description: Данные пользователя
+      description: Данные вакансии
       required:
-        - nickname
-        - f_name
-        - s_name
+        - vacancy_id
+        - company
+        - title
+        - description
+        - chat_id_employer
       properties:
-        chat_id:
+        vacancy_id:
           type: integer
           format: int64
-          description: Chat_id пользователя
+          description: Уникальный номер вакансии
           x-oapi-codegen-extra-tags:
-            db: chat_id
-        nickname:
+            db: vacancy_id
+        company:
           type: string
-          description: nickname пользователя
+          description: Название компании
           x-oapi-codegen-extra-tags:
-            db: nickname
-        f_name:
+            db: company
+        title:
           type: string
-          description: Имя пользователя
+          description: Название вакансии
           x-oapi-codegen-extra-tags:
-            db: f_name
-        s_name:
+            db: title
+        description:
           type: string
-          description: Фамилия пользователя
+          description: Описание вакансии
           x-oapi-codegen-extra-tags:
-            db: s_name
+            db: description
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Описание вакансии
+          x-oapi-codegen-extra-tags:
+            db: chat_id_employer
 
-    User:
+    Vacancy:
       type: object
       description: Данные пользователя
       required:
-        - chat_id
-        - nickname
-        - f_name
-        - s_name
-        - resume
+        - vacancy_id
+        - company
+        - title
+        - description
+        - chat_id_employer
       properties:
-        chat_id:
+        vacancy_id:
           type: integer
           format: int64
-          description: Chat_id пользователя
-        nickname:
+          description: Уникальный номер вакансии
+        company:
           type: string
-          description: nickname пользователя
-        f_name:
+          description: Название компании
+        title:
           type: string
-          description: Имя пользователя
-        s_name:
+          description: Название вакансии
+        description:
           type: string
-          description: Фамилия пользователя
-        resume:
-          type: string
-          format: uri
-          description: Ссылка на резюме
-      
+          description: Описание вакансии
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Уникальный ид работодателя
+
     Results:
       type: object
-      description: Данные пользователей
+      description: Данные вакансий
       required:
-        - seekers
+        - vacancies
       properties:
-        seekers:
+        vacancies:
           type: array
           items:
             description: Данные пользователей
@@ -211,39 +219,39 @@ components:
       type: object
       description: Данные
       required:
-        - chat_id
-        - nickname
-        - fname
-        - sname
-        - resume
+        - vacancy_id
+        - company
+        - title
+        - description
+        - chat_id_employer
       properties:  
-        chat_id:
+        vacancy_id:
           type: integer
           format: int64
-          description: Уникальный id чата с пользователем
+          description: Уникальный номер вакансии
           x-oapi-codegen-extra-tags:
-            db: chat_id
-        nickname:
+            db: vacancy_id
+        company:
           type: string
-          description: nickname пользователя
+          description: Название компании
           x-oapi-codegen-extra-tags:
-            db: nickname
-        fname:
+            db: company
+        title:
           type: string
-          description: Имя пользователя
+          description: Название вакансии
           x-oapi-codegen-extra-tags:
-            db: f_name
-        sname:
+            db: title
+        description:
           type: string
-          description: Фамилия пользователя
+          description: Описание вакансии
           x-oapi-codegen-extra-tags:
-            db: s_name
-        resume:
-          type: string
-          format: uri
-          description: Ссылка на резюме
+            db: description
+        chat_id_employer:
+          type: integer
+          format: int64
+          description: Описание вакансии
           x-oapi-codegen-extra-tags:
-            db: resume
+            db: chat_id_employer
 
     Result:
       type: object
@@ -251,9 +259,7 @@ components:
       required:
         - chat_id
         - nickname
-        - f_name
-        - s_name
-        - resume
+        - company
       properties:
         chat_id:
           type: integer
@@ -262,13 +268,6 @@ components:
         nickname:
           type: string
           description: nickname пользователя
-        f_name:
+        company:
           type: string
-          description: Имя пользователя
-        s_name:
-          type: string
-          description: Фамилия пользователя
-        resume:
-          type: string
-          format: uri
-          description: Ссылка на резюме
+          description: Название компании

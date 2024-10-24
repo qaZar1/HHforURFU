@@ -9,9 +9,10 @@ tasks:
      - mockgen -source={{.ROOT_DIR}}/internal/service/interface.go -destination={{.ROOT_DIR}}/internal/mocks/mock_service.go -package=mocks
 
   swagger:
+    desc: Генерация сваггера
     vars:
-      DOCS: responses/autogen/swagger
-    cmds: 
+      DOCS: responses/autogen/server
+    cmds:
      - swag init --parseDependency -d responses,responses/internal/service -o {{.DOCS}} -g main.go
 # Подготавливаем данные для подключения в docs.go
      - cat responses/README.md | sed 's/"/\\"/g' > {{.DOCS}}/README.md
@@ -23,8 +24,14 @@ tasks:
      - mv {{.DOCS}}/tmp.go {{.DOCS}}/docs.go
      - sed -i -e '/LeftDelim/d' {{.DOCS}}/docs.go
      - sed -i -e '/RightDelim/d' {{.DOCS}}/docs.go
-     # need delete leftDelim in docs.go
-# Генерируем router на основе swagger спецификаций
+     - sed -i -e 's/version:\ \"2\.0\"/version:\ \"3.0\"/g' {{.DOCS}}/swagger.yaml
+     - sed -i -e '/^ *parameters:/,/^[^ ]/{ /^ *type:/ s/type:/schema:\n          type:/; }' {{.DOCS}}/swagger.yaml
+  
+  generate:
+    desc: Генерация сваггера
+    vars:
+      DOCS: responses/autogen/server
+    cmds:
      - oapi-codegen --config=responses/config/codegen.yml {{.DOCS}}/swagger.yaml
      
   autogen:

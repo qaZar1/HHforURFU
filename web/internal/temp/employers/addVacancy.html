@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/addVacancy.css">
+    <title>Подробная информация об отклике</title>
+</head>
+<body>
+    <div class="header">
+        <h1 onclick="window.location.href='/employers'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='/home'">Сайт для соискателей</button>
+            <button onclick="window.location.href='/employers/responses'">Отклики</button>
+            <button onclick="window.location.href='/employers/vacancies'">Мои Вакансии</button>
+        </nav>
+    </div>
+    <div class="container">
+        <h2>Новая вакансия</h2>
+        <div class="input-group">
+            <label for="vacancy-title">Название вакансии</label>
+            <input type="text" id="vacancy-title" name="vacancy-title" placeholder="Введите название вакансии">
+        </div>
+        <div class="input-group">
+            <label for="vacancy-description">Описание вакансии</label>
+            <textarea id="vacancy-description" name="vacancy-description" placeholder="Введите описание вакансии"></textarea>
+        </div>
+        <div class="group">
+            <div class="text">
+                <p class="vacancy-filters">Фильтры</p>
+            </div>
+            <div class="checkbox-group">
+            <label>
+                <input type="checkbox" name="schedule" value="Полный день"> Полный день
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="Неполный день"> Неполный день
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="Временная работа"> Временная работа
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="Стажировка"> Стажировка
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="От 4 часов в день"> От 4 часов в день
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="Удаленная работа"> Удаленная работа
+            </label>
+            <label>
+                <input type="checkbox" name="schedule" value="Гибкий график"> Гибкий график
+            </label>
+            </div>
+        </div>
+
+        <!-- Кнопка отправки данных -->
+        <div class="submit-group">
+            <button type="submit" id="submit-vacancy">Добавить вакансию</button>
+        </div>
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/authEmployers.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken();
+        });
+
+        document.getElementById('submit-vacancy').addEventListener('click', async () => {
+            // Получаем значения из полей
+            const title = document.getElementById('vacancy-title').value;
+            const description = document.getElementById('vacancy-description').value;
+
+            // Получаем отмеченные чекбоксы
+            const checkboxes = document.querySelectorAll('input[name="schedule"]:checked');
+            const tags = Array.from(checkboxes).map(checkbox => checkbox.value);
+            
+            
+            const cookies = document.cookie.split('; ');
+    
+            // Ищем куки с именем 'token'
+            const username_token = cookies.find(cookie => cookie.startsWith('username='));
+
+            // Проверяем, существует ли куки
+            if (!username_token) {
+                return true; // Токен не существует, считается, что истек
+            }
+
+            const username = username_token.split('=')[1]
+
+            // Создаем объект данных для отправки
+            const vacancyData = {
+                title: title,
+                description: description,
+                tags: tags,
+                username: username
+            };
+
+            // Отправляем POST-запрос
+            try {
+                const response = await fetch('/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // Указываем формат данных
+                    },
+                    body: JSON.stringify(vacancyData) // Преобразуем объект в JSON
+                });
+
+                if (response.ok) {
+                    // Если ответ успешный, можно выполнить дополнительные действия, например, перенаправить пользователя
+                    console.log('Вакансия успешно добавлена!');
+                    window.location.href = '/employers/vacancies'; // Перенаправление на страницу вакансий
+                } else {
+                    console.error('Ошибка при добавлении вакансии:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+            }
+        });
+    </script>
+</body>
+</html>

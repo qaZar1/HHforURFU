@@ -3,8 +3,8 @@ package service
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/employers/autogen"
 	"github.com/qaZar1/HHforURFU/employers/internal/database"
+	"github.com/qaZar1/HHforURFU/employers/internal/models"
 )
 
 type Service struct {
@@ -19,22 +19,14 @@ func NewService(db *sqlx.DB) *Service {
 }
 
 // Реализация интерфейса
-func (srv *Service) GetAllUsers() ([]autogen.Info, error) {
-	return srv.db.GetAllUsers()
+func (srv *Service) RegisterEmployer(seeker models.Employer) (bool, error) {
+	return srv.db.AddEmployer(seeker)
 }
 
-func (srv *Service) GetUserByChatID(chatId int64) (*autogen.Info, error) {
-	return srv.db.GetUserByChatID(chatId)
+func (srv *Service) CheckEmployer(employerID int64) (models.Employer, error) {
+	return srv.db.CheckEmployerUsername(employerID)
 }
 
-func (srv *Service) AddUser(user autogen.User) (bool, error) {
-	return srv.db.AddUser(user)
-}
-
-func (srv *Service) RemoveUser(chatId int64) (bool, error) {
-	return srv.db.RemoveUser(chatId)
-}
-
-func (srv *Service) UpdateUser(chatId int64, updateUser autogen.UpdateUser) (bool, error) {
-	return srv.db.UpdateUser(chatId, updateUser)
+func (srv *Service) CheckEmployerByUsername(username string) (models.Employer, error) {
+	return srv.db.CheckEmployerByUsername(username)
 }

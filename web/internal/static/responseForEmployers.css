@@ -1,0 +1,263 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+/* Стили для хедера */
+.header {
+    background-color: white;
+    color: #007bff;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    border-bottom-left-radius: 20px; /* Скругленные края снизу */
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* Увеличенная тень */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header nav {
+    display: flex;
+    flex-wrap: wrap; /* Добавляем возможность переноса кнопок на малых экранах */
+    justify-content: center;
+}
+
+.header button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.header button:hover {
+    background-color: #0056b3;
+}
+
+/* Основной контент */
+.container {
+    padding: 20px;
+    text-align: center;
+}
+
+.vacancy-details {
+    background-color: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    text-align: left;
+}
+
+.vacancy-details h2 {
+    margin: 0 0 10px;
+}
+
+.vacancy-details p {
+    margin: 5px 0;
+}
+
+.seeker-details {
+    background-color: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+}
+
+.seeker-details h2 {
+    margin: 0 0 10px;
+    text-align: center;
+}
+
+.seeker-details p {
+    margin: 5px 0;
+    text-align: left;
+}
+
+/* Стили для чата */
+.chat {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15); /* Увеличенная тень */
+    max-width: 800px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрируем содержимое */
+    margin-left: auto; /* Центрируем чат по горизонтали */
+    margin-right: auto; /* Центрируем чат по горизонтали */
+}
+
+.chat-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding: 10px;
+    width: 100%; /* Чат занимает 100% ширины */
+}
+
+.chat-message {
+    margin-bottom: 10px;
+}
+
+.chat-message p {
+    margin: 0;
+}
+
+.chat-input {
+    display: flex;
+    max-width: 800px; /* Поле ввода занимает 100% ширины */
+    margin: auto;
+    margin-top: 0.5em;
+    width: 100%;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.chat-input button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.chat-input button:hover {
+    background-color: #0056b3;
+}
+
+.button-container {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    max-width: 700px;
+    margin: 20px auto;
+}
+
+.accept-button {
+    background-color: #28a745; /* Зеленый цвет */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 40%;
+}
+
+.accept-button:hover {
+    background-color: #218838; /* Более темный зеленый при наведении */
+}
+
+.refuse-button {
+    background-color: #dc3545; /* Красный цвет */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 40%;
+}
+
+.refuse-button:hover {
+    background-color: #c82333; /* Более темный красный при наведении */
+}
+
+.tag-container {
+    display: flex;
+    flex-wrap: wrap; /* Чтобы теги автоматически переносились на новую строку при нехватке места */
+    gap: 10px; /* Отступы между тегами */
+    margin-top: 10px;
+}
+
+.tag {
+    background-color: #e0f7ff; /* Светло-синий цвет */
+    color: #0056b3; /* Цвет текста (более темный синий) */
+    padding: 8px 15px; /* Внутренние отступы для тегов */
+    border-radius: 20px; /* Сильно скругленные края */
+    font-size: 0.9em; /* Размер текста немного меньше стандартного */
+    display: inline-block; /* Тег занимает минимальное место */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Небольшая тень для визуального выделения */
+    cursor: default; /* Курсор в виде указателя при наведении */
+    transition: background-color 0.3s ease; /* Анимация при изменении цвета */
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .header button {
+        width: 100%; /* Кнопки занимают 100% ширины */
+        margin: 10px 0;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .vacancy-details,
+    .chat {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .header nav {
+        flex-direction: column;
+    }
+
+    .header button {
+        width: 100%;
+        margin: 5px 0;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .vacancy-details,
+    .chat {
+        padding: 10px;
+    }
+}

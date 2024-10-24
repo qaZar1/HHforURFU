@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	autogen "github.com/qaZar1/HHforURFU/responses/autogen"
+	models "github.com/qaZar1/HHforURFU/responses/internal/models"
 )
 
 // MockServiceInterface is a mock of ServiceInterface interface.
@@ -35,135 +35,75 @@ func (m *MockServiceInterface) EXPECT() *MockServiceInterfaceMockRecorder {
 }
 
 // AddResponses mocks base method.
-func (m *MockServiceInterface) AddResponses(response autogen.Response) error {
+func (m *MockServiceInterface) AddResponses(respons models.Response) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddResponses", response)
+	ret := m.ctrl.Call(m, "AddResponses", respons)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddResponses indicates an expected call of AddResponses.
-func (mr *MockServiceInterfaceMockRecorder) AddResponses(response interface{}) *gomock.Call {
+func (mr *MockServiceInterfaceMockRecorder) AddResponses(respons interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddResponses", reflect.TypeOf((*MockServiceInterface)(nil).AddResponses), response)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddResponses", reflect.TypeOf((*MockServiceInterface)(nil).AddResponses), respons)
 }
 
-// GetAllResponses mocks base method.
-func (m *MockServiceInterface) GetAllResponses() ([]autogen.Response, error) {
+// GetResponseByID mocks base method.
+func (m *MockServiceInterface) GetResponseByID(id int64) (models.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllResponses")
-	ret0, _ := ret[0].([]autogen.Response)
+	ret := m.ctrl.Call(m, "GetResponseByID", id)
+	ret0, _ := ret[0].(models.Response)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAllResponses indicates an expected call of GetAllResponses.
-func (mr *MockServiceInterfaceMockRecorder) GetAllResponses() *gomock.Call {
+// GetResponseByID indicates an expected call of GetResponseByID.
+func (mr *MockServiceInterfaceMockRecorder) GetResponseByID(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllResponses", reflect.TypeOf((*MockServiceInterface)(nil).GetAllResponses))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseByID", reflect.TypeOf((*MockServiceInterface)(nil).GetResponseByID), id)
 }
 
-// GetResponsesByChatID mocks base method.
-func (m *MockServiceInterface) GetResponsesByChatID(chatId int64) ([]autogen.Response, error) {
+// GetResponsesByEmployersID mocks base method.
+func (m *MockServiceInterface) GetResponsesByEmployersID(id int64) ([]models.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponsesByChatID", chatId)
-	ret0, _ := ret[0].([]autogen.Response)
+	ret := m.ctrl.Call(m, "GetResponsesByEmployersID", id)
+	ret0, _ := ret[0].([]models.Response)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetResponsesByChatID indicates an expected call of GetResponsesByChatID.
-func (mr *MockServiceInterfaceMockRecorder) GetResponsesByChatID(chatId interface{}) *gomock.Call {
+// GetResponsesByEmployersID indicates an expected call of GetResponsesByEmployersID.
+func (mr *MockServiceInterfaceMockRecorder) GetResponsesByEmployersID(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByChatID", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByChatID), chatId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByEmployersID", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByEmployersID), id)
 }
 
-// GetResponsesByChatIDEmployer mocks base method.
-func (m *MockServiceInterface) GetResponsesByChatIDEmployer(chatIdEmployer int64) ([]autogen.Response, error) {
+// GetResponsesByUsername mocks base method.
+func (m *MockServiceInterface) GetResponsesByUsername(username string) ([]models.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponsesByChatIDEmployer", chatIdEmployer)
-	ret0, _ := ret[0].([]autogen.Response)
+	ret := m.ctrl.Call(m, "GetResponsesByUsername", username)
+	ret0, _ := ret[0].([]models.Response)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetResponsesByChatIDEmployer indicates an expected call of GetResponsesByChatIDEmployer.
-func (mr *MockServiceInterfaceMockRecorder) GetResponsesByChatIDEmployer(chatIdEmployer interface{}) *gomock.Call {
+// GetResponsesByUsername indicates an expected call of GetResponsesByUsername.
+func (mr *MockServiceInterfaceMockRecorder) GetResponsesByUsername(username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByChatIDEmployer", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByChatIDEmployer), chatIdEmployer)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByUsername", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByUsername), username)
 }
 
-// GetResponsesByVacancyID mocks base method.
-func (m *MockServiceInterface) GetResponsesByVacancyID(vacancyId int64) ([]autogen.Response, error) {
+// UpdateResponse mocks base method.
+func (m *MockServiceInterface) UpdateResponse(response_id int, updateRespons models.Response) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponsesByVacancyID", vacancyId)
-	ret0, _ := ret[0].([]autogen.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetResponsesByVacancyID indicates an expected call of GetResponsesByVacancyID.
-func (mr *MockServiceInterfaceMockRecorder) GetResponsesByVacancyID(vacancyId interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByVacancyID", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByVacancyID), vacancyId)
-}
-
-// GetResponsesByVacancyIDAndChatID mocks base method.
-func (m *MockServiceInterface) GetResponsesByVacancyIDAndChatID(vacancyId, chatId int64) (*autogen.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponsesByVacancyIDAndChatID", vacancyId, chatId)
-	ret0, _ := ret[0].(*autogen.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetResponsesByVacancyIDAndChatID indicates an expected call of GetResponsesByVacancyIDAndChatID.
-func (mr *MockServiceInterfaceMockRecorder) GetResponsesByVacancyIDAndChatID(vacancyId, chatId interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByVacancyIDAndChatID", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByVacancyIDAndChatID), vacancyId, chatId)
-}
-
-// GetResponsesByVacancyIDAndChatIDEmployer mocks base method.
-func (m *MockServiceInterface) GetResponsesByVacancyIDAndChatIDEmployer(vacancyId, chatIdEmployer int64) (*autogen.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponsesByVacancyIDAndChatIDEmployer", vacancyId, chatIdEmployer)
-	ret0, _ := ret[0].(*autogen.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetResponsesByVacancyIDAndChatIDEmployer indicates an expected call of GetResponsesByVacancyIDAndChatIDEmployer.
-func (mr *MockServiceInterfaceMockRecorder) GetResponsesByVacancyIDAndChatIDEmployer(vacancyId, chatIdEmployer interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponsesByVacancyIDAndChatIDEmployer", reflect.TypeOf((*MockServiceInterface)(nil).GetResponsesByVacancyIDAndChatIDEmployer), vacancyId, chatIdEmployer)
-}
-
-// RemoveResponses mocks base method.
-func (m *MockServiceInterface) RemoveResponses(vacancyId int64) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveResponses", vacancyId)
+	ret := m.ctrl.Call(m, "UpdateResponse", response_id, updateRespons)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RemoveResponses indicates an expected call of RemoveResponses.
-func (mr *MockServiceInterfaceMockRecorder) RemoveResponses(vacancyId interface{}) *gomock.Call {
+// UpdateResponse indicates an expected call of UpdateResponse.
+func (mr *MockServiceInterfaceMockRecorder) UpdateResponse(response_id, updateRespons interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveResponses", reflect.TypeOf((*MockServiceInterface)(nil).RemoveResponses), vacancyId)
-}
-
-// UpdateRespons mocks base method.
-func (m *MockServiceInterface) UpdateRespons(vacancyId int64, updateResponse autogen.Response) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRespons", vacancyId, updateResponse)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateRespons indicates an expected call of UpdateRespons.
-func (mr *MockServiceInterfaceMockRecorder) UpdateRespons(vacancyId, updateResponse interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRespons", reflect.TypeOf((*MockServiceInterface)(nil).UpdateRespons), vacancyId, updateResponse)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResponse", reflect.TypeOf((*MockServiceInterface)(nil).UpdateResponse), response_id, updateRespons)
 }

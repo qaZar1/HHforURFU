@@ -1,38 +1,79 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/Impisigmatus/service_core/utils"
 	"github.com/jmoiron/sqlx"
+	"github.com/qaZar1/HHforURFU/filters/autogen/server"
+	"github.com/qaZar1/HHforURFU/filters/internal/models"
+
 	jsoniter "github.com/json-iterator/go"
-	"github.com/qaZar1/HHforURFU/filters/autogen"
 )
 
 type Transport struct {
 	srv *Service
 }
 
-func NewTransport(db *sqlx.DB) autogen.ServerInterface {
+func NewTransport(db *sqlx.DB) server.ServerInterface {
 	return &Transport{
 		srv: NewService(db),
 	}
 }
 
-// Добавление нового тэга в БД
-// (POST /api/seekers/add)
-func (transport *Transport) PostApiFiltersAdd(w http.ResponseWriter, r *http.Request) {
+// Set godoc
+//
+// @Router /api/filters/getTagsByVacancyID/{vacancy_id} [get]
+// @Summary Получение тегов по vacancy_id
+// @Description При обращении, возвращаются все теги, которые есть у вакансии
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param 	vacancy_id	path	int	true	"ID вакансии"
+//
+// @Success 200 {array} tag "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiFiltersGetTagsByVacancyIDVacancyId(w http.ResponseWriter, r *http.Request, vacancyID int) {
+	tags, err := transport.srv.GetFiltersByVacancyID(int64(vacancyID))
+	if err != nil {
+		utils.WriteString(w, http.StatusBadRequest, err, "Invalid get tags by vacancyID")
+		return
+	}
+
+	if tags == nil {
+		utils.WriteString(w, http.StatusBadRequest, err, "Tags not found")
+		return
+	}
+
+	utils.WriteObject(w, tags)
+}
+
+// Set godoc
+//
+// @Router /api/filters/addFilter [post]
+// @Summary Получение ответов по id
+// @Description При обращении, создается тег
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param	request	body	tag	true	"Данные о фильтре"
+//
+// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PostApiFiltersAddFilter(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
 		return
 	}
 
-	var vacancy autogen.Filters
+	var vacancy models.Tag
 	if err := jsoniter.Unmarshal(data, &vacancy); err != nil {
 		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
 		return
@@ -44,55 +85,4 @@ func (transport *Transport) PostApiFiltersAdd(w http.ResponseWriter, r *http.Req
 	}
 
 	utils.WriteNoContent(w)
-}
-
-// Удаление тэга из БД
-// (DELETE /api/filter/{chat_id}/remove)
-func (transport *Transport) DeleteApiFiltersVacancyIdRemove(w http.ResponseWriter, r *http.Request, chatId int64) {
-	ok, err := transport.srv.RemoveFilters(chatId)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Пользователя не существует")
-		return
-	}
-
-	if ok {
-		utils.WriteString(w, http.StatusOK, nil, "Пользователя не существует")
-		return
-	} else {
-		utils.WriteNoContent(w)
-		return
-	}
-}
-
-// Получение тэгов по vacancy_id
-// (GET /api/seekers/{vacancy_id}/get)
-func (transport *Transport) GetApiFiltersVacancyIdGet(w http.ResponseWriter, r *http.Request, chatId int64) {
-	user, err := transport.srv.GetFiltersByVacancyID(chatId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteNoContent(w)
-			return
-		}
-
-		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить пользователя")
-		return
-	}
-
-	utils.WriteObject(w, user)
-}
-
-// Получение всех тэгов из БД
-// (GET /api/seekers/get)
-func (transport *Transport) GetApiFiltersGet(w http.ResponseWriter, r *http.Request) {
-	users, err := transport.srv.GetAllFilters()
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
-		return
-	}
-
-	utils.WriteObject(w, users)
 }

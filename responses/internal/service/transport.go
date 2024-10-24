@@ -8,28 +8,132 @@ import (
 	"net/http"
 
 	"github.com/Impisigmatus/service_core/utils"
+	"github.com/jmoiron/sqlx"
+	"github.com/qaZar1/HHforURFU/responses/autogen/server"
+	"github.com/qaZar1/HHforURFU/responses/internal/models"
+
 	jsoniter "github.com/json-iterator/go"
-	"github.com/qaZar1/HHforURFU/responses/autogen"
 )
 
 type Transport struct {
-	srv ServiceInterface // Изменено на интерфейс
+	srv ServiceInterface
 }
 
-func NewTransport(srv ServiceInterface) autogen.ServerInterface {
+func NewTransport(db *sqlx.DB) server.ServerInterface {
 	return &Transport{
-		srv: srv,
+		srv: NewService(db),
 	}
 }
 
-func (transport *Transport) PostApiResponsesAdd(w http.ResponseWriter, r *http.Request) {
+// Set godoc
+//
+// @Router /api/responses/getResponsesByUsername/{username} [get]
+// @Summary Получение ответов по username
+// @Description При обращении, возвращаются все ответы, которые есть у username
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param 	username	path	string	true	"ID пользователя"
+//
+// @Success 200 {array} response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiResponsesGetResponsesByUsernameUsername(w http.ResponseWriter, r *http.Request, username string) {
+	responses, err := transport.srv.GetResponsesByUsername(username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.WriteString(w, http.StatusNotFound, err, "В базе отсутствуют отклики")
+			return
+		}
+
+		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить отклики")
+		return
+	}
+
+	utils.WriteObject(w, responses)
+}
+
+// Set godoc
+//
+// @Router /api/responses/getResponseByResponseID/{response_id} [get]
+// @Summary Получение ответов по id
+// @Description При обращении, возвращаются все ответы, которые есть у id
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param 	response_id	path	int	true	"ID отклика"
+//
+// @Success 200 {object} response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiResponsesGetResponseByResponseIDResponseId(w http.ResponseWriter, r *http.Request, id int) {
+	response, err := transport.srv.GetResponseByID(int64(id))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.WriteString(w, http.StatusNotFound, err, "В базе отсутствуют отклики")
+			return
+		}
+
+		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить отклики")
+		return
+	}
+
+	utils.WriteObject(w, response)
+}
+
+// Set godoc
+//
+// @Router /api/responses/getResponsesByEmployersID/{id} [get]
+// @Summary Получение ответов по employers id
+// @Description При обращении, возвращаются все ответы, которые есть у employers id
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param 	id	path	int	true	"ID работодателя"
+//
+// @Success 200 {array} response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiResponsesGetResponsesByEmployersIDId(w http.ResponseWriter, r *http.Request, id int) {
+	response, err := transport.srv.GetResponsesByEmployersID(int64(id))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.WriteString(w, http.StatusNotFound, err, "В базе отсутствуют отклики")
+			return
+		}
+
+		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить отклики")
+		return
+	}
+
+	utils.WriteObject(w, response)
+}
+
+// Set godoc
+//
+// @Router /api/responses/addResponse [post]
+// @Summary Добавление отклика в БД
+// @Description При обращении, добавляется отклик в БД по телу запрсоа
+//
+// @Tags APIs
+// @Produce      application/json
+// @Param 	request	body	response	true	"Тело запроса"
+//
+// @Success 200 {object} nil "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PostApiResponsesAddResponse(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
 		return
 	}
 
-	var response autogen.Response
+	var response models.Response
 	if err := jsoniter.Unmarshal(data, &response); err != nil {
 		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
 		return
@@ -43,85 +147,34 @@ func (transport *Transport) PostApiResponsesAdd(w http.ResponseWriter, r *http.R
 	utils.WriteNoContent(w)
 }
 
-// Удаление вакансии из БД
-// (DELETE /api/seekers/{chat_id}/remove)
-func (transport *Transport) DeleteApiResponsesVacancyIdRemove(w http.ResponseWriter, r *http.Request, vacancyId int64) {
-	ok, err := transport.srv.RemoveResponses(vacancyId)
-	if err != nil {
-		utils.WriteString(w, http.StatusNotFound, err, "Пользователя не существует")
-		return
-	}
-
-	if ok {
-		utils.WriteString(w, http.StatusOK, nil, "Пользователя не существует")
-		return
-	} else {
-		utils.WriteNoContent(w)
-		return
-	}
-}
-
-// Получение данных вакансии по vacancy_id
-// (GET /api/seekers/{vacancy_id}/get)
-func (transport *Transport) GetApiResponsesVacancyIdVacancyIdGet(w http.ResponseWriter, r *http.Request, vacancyId int64) {
-	user, err := transport.srv.GetResponsesByVacancyID(vacancyId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteNoContent(w)
-			return
-		}
-
-		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить пользователя")
-		return
-	}
-
-	utils.WriteObject(w, user)
-}
-
 // Set godoc
 //
-// @Router /api/seekers/get [get]
-// @Summary Получение всех откликов из БД
-// @Description Хуй
+// @Router /api/responses/edit/{response_id} [put]
+// @Summary Изменение отклика
+// @Description При обращении, возвращается обновленный отклик
 //
 // @Tags APIs
-// @Accept       application/json
 // @Produce      application/json
+// @Param 	response_id	path	int	true	"ID отклика"
 //
-// @Success 200 {object} response "Запрос выполнен успешно"
+// @Success 204 {object} nil "Запрос выполнен успешно"
 // @Failure 400 {object} nil "Ошибка валидации данных"
 // @Failure 401 {object} nil "Ошибка авторизации"
 // @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
-func (transport *Transport) GetApiResponsesGet(w http.ResponseWriter, r *http.Request) {
-	users, err := transport.srv.GetAllResponses()
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
-		return
-	}
-
-	utils.WriteObject(w, users)
-}
-
-// Обновление информации о вакансии в БД
-// (PUT /api/vacancies/{vacancy_id}/update)
-func (transport *Transport) PutApiResponsesVacancyIdUpdate(w http.ResponseWriter, r *http.Request, vacancyId int64) {
+func (transport *Transport) PutApiResponsesEditResponseId(w http.ResponseWriter, r *http.Request, response_id int) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
 		return
 	}
 
-	var updateRespons autogen.Response
-	if err := jsoniter.Unmarshal(data, &updateRespons); err != nil {
+	var updateResponse models.Response
+	if err := jsoniter.Unmarshal(data, &updateResponse); err != nil {
 		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
 		return
 	}
 
-	ok, err := transport.srv.UpdateRespons(vacancyId, updateRespons)
+	ok, err := transport.srv.UpdateResponse(response_id, updateResponse)
 	if err != nil {
 		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось обновить данные пользователя")
 		return
@@ -131,49 +184,7 @@ func (transport *Transport) PutApiResponsesVacancyIdUpdate(w http.ResponseWriter
 		utils.WriteNoContent(w)
 		return
 	} else {
-		utils.WriteString(w, http.StatusNotFound, err, "Пользователь не найден")
+		utils.WriteString(w, http.StatusNotFound, err, "Отклик не найден")
 		return
 	}
-}
-
-func (transport *Transport) GetApiResponsesChatIdEmployerChatIdEmployerGet(w http.ResponseWriter, r *http.Request, chatIdEmployer int64) {
-	users, err := transport.srv.GetResponsesByChatIDEmployer(chatIdEmployer)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
-		return
-	}
-
-	utils.WriteObject(w, users)
-}
-
-func (transport *Transport) GetApiResponsesChatIdChatIdGet(w http.ResponseWriter, r *http.Request, chatId int64) {
-	users, err := transport.srv.GetResponsesByChatID(chatId)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
-		return
-	}
-
-	utils.WriteObject(w, users)
-}
-
-func (transport *Transport) GetApiResponsesVacancyIdAndChatIdEmployerGet(w http.ResponseWriter, r *http.Request, vacancyId int64, chatIdEmployer int64) {
-	users, err := transport.srv.GetResponsesByVacancyIDAndChatID(vacancyId, chatIdEmployer)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить вакансии")
-		return
-	}
-	if users == nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет вакансий")
-		return
-	}
-
-	utils.WriteObject(w, users)
 }

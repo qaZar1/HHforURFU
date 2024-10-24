@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	autogen "github.com/qaZar1/HHforURFU/employers/autogen"
 )
 
 // MockServiceInterface is a mock of ServiceInterface interface.

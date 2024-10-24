@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/responses.css">
+    <title>Отклики</title>
+</head>
+<body>
+    <!-- Хедер с названием сайта и кнопками -->
+    <div class="header">
+        <h1 onclick="window.location.href='/home'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='employers'">Сайт для работодателей</button>
+            <button onclick="window.location.href='/vacancies'">Вакансии</button>
+            <button onclick="window.location.href='/responses'">Мои отклики</button>
+        </nav>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <h2>Ваши отклики</h2>
+
+        <!-- Пример отклика -->
+        {{ range .Responses }}
+            <div class="response">
+                <div class="response-content">
+                    <h3>Отклик на вакансию: {{ .Title}}</h3>
+                    <p>Статус отклика: {{ .Status }}</p>
+                    <p>Компания: {{ .Company }}</p>
+                    <p>Описание вакансии: {{ .Description }}</p>
+                    <div class="tag-container"> <!-- Блок для тегов -->
+                        {{ range .Tags }} <!-- Итерация по тегам -->
+                            <span class="tag">{{ . }}</span> <!-- Отображение каждого тега -->
+                        {{ end }}
+                    </div>
+                </div>
+                <!-- Добавляем динамическую ссылку с ID отклика -->
+                <button onclick="window.location.href='/response/id-{{ .RespID }}'">Открыть отклик</button>
+            </div>
+        {{ end }}
+
+        <!-- Другие отклики можно добавлять аналогично -->
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/auth.js'; // Путь к вашему файлу auth.js
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken(); // Проверка токена при загрузке страницы
+        });
+    </script>
+</body>
+</html>

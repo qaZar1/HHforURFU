@@ -1,6 +1,33 @@
 version: 3
 
 tasks:
+  swagger:
+    desc: Генерация сваггера
+    vars:
+      DOCS: vacancies/autogen/server
+    cmds:
+     - swag init --parseDependency -d vacancies,vacancies/internal/service -o {{.DOCS}} -g main.go
+# Подготавливаем данные для подключения в docs.go
+     - cat vacancies/README.md | sed 's/"/\\"/g' > {{.DOCS}}/README.md
+     - awk -F/ '{print "\"" $0 "\\n\"+"}' {{.DOCS}}/README.md > {{.DOCS}}/README.data
+     - sed -i -e '1 s/^/ Description:/;' {{.DOCS}}/README.data
+     - echo "\"\"," >> {{.DOCS}}/README.data
+# Подключаем README.md в docs.go
+     - sed -e '/%README_FILE%/{' -e "r {{.DOCS}}/README.data" -e 'd' -e '}' {{.DOCS}}/docs.go > {{.DOCS}}/tmp.go
+     - mv {{.DOCS}}/tmp.go {{.DOCS}}/docs.go
+     - sed -i -e '/LeftDelim/d' {{.DOCS}}/docs.go
+     - sed -i -e '/RightDelim/d' {{.DOCS}}/docs.go
+     - sed -i -e 's/version:\ \"2\.0\"/version:\ \"3.0\"/g' {{.DOCS}}/swagger.yaml
+     - sed -i -e '/^ *parameters:/,/^[^ ]/{ /^ *type:/ s/type:/schema:\n          type:/; }' {{.DOCS}}/swagger.yaml
+
+  generate:
+    desc: Генерация сваггера
+    vars:
+      DOCS: vacancies/autogen/server
+    cmds:
+     - oapi-codegen --config=vacancies/config/codegen.yml {{.DOCS}}/swagger.yaml
+      
+     
   autogen:
     desc: Автогенерация OpenAPI 3
     deps:
@@ -38,8 +65,3 @@ tasks:
       - cd {{.ROOT_DIR}} && mkdir -p {{.AUTOGEN_DIR}}
       - cd {{.ROOT_DIR}} && sed -e 's/^/    /' README.md > {{.AUTOGEN_DIR}}/README.md
       - cd {{.ROOT_DIR}} && sed -e '/    %README.md%/{' -e "r {{.AUTOGEN_DIR}}/README.md" -e 'd' -e '}' oapi3.yaml > {{.AUTOGEN_DIR}}/oapi3.yaml
-
-  dependencies:
-    cmds:
-      - '[ -x "$(command -v oapi-codegen)" ] || go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest'
-      - '[ -x "$(command -v redoc-cli)" ] || npm i -g --prefix=/opt/npm redoc-cli'

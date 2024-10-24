@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/vacancyForEmployers.css">
+    <title>Подробная информация об отклике</title>
+</head>
+<body>
+    <!-- Хедер с названием сайта и кнопками -->
+    <div class="header">
+        <h1 onclick="window.location.href='/employers'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='/home'">Сайт для соискателей</button>
+            <button onclick="window.location.href='/employers/responses'">Отклики</button>
+            <button onclick="window.location.href='/employers/vacancies'">Мои Вакансии</button>
+        </nav>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <div class="vacancy-details">
+            <h2>Вакансия: {{ .Vacancy.Title }}</h2>
+            <p><strong>Компания:</strong> {{ .Vacancy.Company }}</p>
+            <p><strong>Описание:</strong> {{ .Vacancy.Description }}</p>
+            <p><strong>Статус вакансии:</strong> {{ .Vacancy.Status }}</p>
+            <div class="tag-container"> <!-- Блок для тегов -->
+                {{ range .Vacancy.Tags }} <!-- Итерация по тегам -->
+                    <span class="tag">{{ . }}</span> <!-- Отображение каждого тега -->
+                {{ end }}
+            </div>
+        </div>
+        <div class="button-container">
+            <button class="delete-button" id="delete" method="DELETE" action="/deleteVacancy">Удалить</button>
+        </div>
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/authEmployers.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken();
+        });
+
+        document.getElementById('delete').addEventListener('click', async function(event) {
+            event.preventDefault();
+
+            const path = window.location.pathname;
+
+            // Регулярное выражение для извлечения ID из формата /response/id-{id}
+            const regex = /\/vacancy\/id-(\d+)/;
+
+            const match = path.match(regex);
+
+            const formData = new FormData();
+            formData.append('id', match[1]);
+
+            try {
+                // Отправляем данные на сервер через Fetch API
+                const response = await fetch('/deleteVacancy', {
+                    method: 'DELETE',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = "/employers/vacancies";
+                } else {
+                    // Если произошла ошибка, показываем сообщение
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
