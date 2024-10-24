@@ -14,15 +14,14 @@
             <input type="text" placeholder="Никнейм" id="username" name="username" required>
             <input type="password" placeholder="Пароль" id="password" name="password" required>
             <input type="text" placeholder="Компания" id="company" name="company">
-            <button type="submitEmployers">Зарегистрироваться</button>
+            <button type="submit">Зарегистрироваться</button> <!-- Изменен тип на submit -->
         </form>
     </div>
-    <div name="error-message"></div>
+    <div id="error-message" style="display: none;">
         <h1>Ошибка регистрации. Попробуйте еще раз.</h1>
     </div>
-
     <script>
-        document.getElementById('registerForm').addEventListener('submitEmployers', async function(event) {
+        document.getElementById('registerForm').addEventListener('submit', async function(event) { // Изменено на 'submit'
             event.preventDefault();
 
             // Собираем данные из формы
@@ -46,15 +45,15 @@
                 });
 
                 if (response.ok) {
-                    // Если сервер вернул успешный ответ, перенаправляем на /
+                    // Если сервер вернул успешный ответ, перенаправляем на страницу входа
                     window.location.href = '/loginEmployers';
                 } else {
                     // Если произошла ошибка, показываем сообщение
-                    document.getElementsByName('error-message').style.display = 'block';
+                    document.getElementById('error-message').style.display = 'block';
                 }
             } catch (error) {
                 console.error('Ошибка отправки данных:', error);
-                document.getElementsByName('error-message').style.display = 'block';
+                document.getElementById('error-message').style.display = 'block';
             }
         });
     </script>
