@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/response.css">
+    <title>Подробная информация об отклике</title>
+</head>
+<body>
+    <!-- Хедер с названием сайта и кнопками -->
+    <div class="header">
+        <h1 onclick="window.location.href='/home'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='employers'">Сайт для работодателей</button>
+            <button onclick="window.location.href='/vacancies'">Вакансии</button>
+            <button onclick="window.location.href='/responses'">Мои отклики</button>
+        </nav>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <div class="vacancy-details">
+            <h2>Вакансия: {{ .Vacancy.Title }}</h2>
+            <p><strong>Компания:</strong> {{ .Vacancy.Company }}</p>
+            <p><strong>Статус:</strong> {{ .Vacancy.Status }}</p>
+            <p><strong>Описание:</strong> {{ .Vacancy.Description }}</p>
+            <div class="tag-container"> <!-- Блок для тегов -->
+                {{ range .Vacancy.Tags }} <!-- Итерация по тегам -->
+                    <span class="tag">{{ . }}</span> <!-- Отображение каждого тега -->
+                {{ end }}
+            </div>
+        </div>
+        <div class="seeker-details">
+            <h2>Информация об отклике</h2>
+            <p><strong>Статус отклика:</strong> {{.Response.Status}}</p>
+        </div>
+        <div class="chat">
+            {{ if or (eq .Response.Status "Ожидает ответа") (eq .Response.Status "Принято") }}
+            <h3>Чат с работодателем</h3>
+            <div class="chat-messages" id="chat-messages" style="height: 400px; overflow-y: auto;">
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="Введите сообщение...">
+                <button id="chat-button">Отправить</button>
+            </div>
+            {{ else }}
+            <p>Чат недоступен, так как отклик был отклонён.</p>
+            {{ end }}
+        </div>
+    </div>
+    
+    <script type="module">
+        import { checkToken } from '/static/js/auth.js'; // Путь к вашему файлу auth.js
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken(); // Проверка токена при загрузке страницы
+        });
+
+        // Инициализация WebSocket-соединения
+        const socket = new WebSocket('ws://localhost:8006/ws?user_id={{.Seeker.ID}}&user_type=seeker&response_id={{.Response.RespID}}'); // Замените URL на ваш WebSocket-сервер
+
+        const chatInput = document.getElementById('chat-input');
+        const chatButton = document.getElementById('chat-button');
+        const chatMessages = document.getElementById('chat-messages');
+
+        // Обработка входящих сообщений от WebSocket-сервера
+        socket.addEventListener('message', function (event) {
+            const message = JSON.parse(event.data);
+            const isSenderSeeker = message.sender_type === 'seeker'; // Проверяем, кто отправил
+
+            // Отображаем сообщение в зависимости от того, кто его отправил
+            appendMessage(isSenderSeeker ? 'Вы' : 'Работодатель', message.text);
+        });
+
+        // Отправка сообщения по нажатию на кнопку
+        chatButton.addEventListener('click', function () {
+            const text = chatInput.value;
+            if (text !== '') {
+                const message = {
+                    response_id: Number('{{.Response.RespID}}'), // Идентификатор вакансии (получите динамически)
+                    sender_type: 'seeker', // Тип отправителя
+                    sender_id: Number('{{.Seeker.ID}}'), // ID соискателя (получите динамически)
+                    receiver_type: 'employer', // Тип получателя
+                    receiver_id: Number('{{.Response.EmployerID}}'), // ID работодателя (получите динамически)
+                    text: text
+                };
+                socket.send(JSON.stringify(message)); // Отправляем сообщение на сервер
+                appendMessage('Вы', text); // Добавляем своё сообщение в интерфейс
+                chatInput.value = ''; // Очищаем поле ввода
+            }
+        });
+
+        // Функция для отображения сообщения в чате
+        function appendMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+            messageElement.innerHTML = `<p><strong>${sender}:</strong> ${message}</p>`;
+            chatMessages.appendChild(messageElement);
+            scrollToBottom();
+        }
+
+        // Функция для прокрутки чата к последнему сообщению
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Прокрутка чата вниз при загрузке страницы
+        window.onload = function() {
+            scrollToBottom();
+        };
+    </script>
+</body>
+</html>

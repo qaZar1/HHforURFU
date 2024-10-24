@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/responses/autogen"
 	"github.com/qaZar1/HHforURFU/responses/internal/database"
+	"github.com/qaZar1/HHforURFU/responses/internal/models"
 )
 
 type Service struct {
@@ -16,38 +16,22 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
-func (srv *Service) GetAllResponses() ([]autogen.Response, error) {
-	return srv.db.GetAllResponses()
+func (srv *Service) GetResponsesByUsername(username string) ([]models.Response, error) {
+	return srv.db.GetResponsesByUsername(username)
 }
 
-func (srv *Service) GetResponsesByVacancyIDAndChatIDEmployer(vacancyId int64, chatIdEmployer int64) (*autogen.Response, error) {
-	return srv.db.GetResponsesByVacancyIDAndChatIDEmployer(vacancyId, chatIdEmployer)
+func (srv *Service) GetResponseByID(id int64) (models.Response, error) {
+	return srv.db.GetResponsesById(id)
 }
 
-func (srv *Service) AddResponses(respons autogen.Response) error {
+func (srv *Service) GetResponsesByEmployersID(id int64) ([]models.Response, error) {
+	return srv.db.GetResponsesByEmployersID(id)
+}
+
+func (srv *Service) AddResponses(respons models.Response) error {
 	return srv.db.AddResponses(respons)
 }
 
-func (srv *Service) RemoveResponses(vacancyId int64) (bool, error) {
-	return srv.db.RemoveResponses(vacancyId)
-}
-
-func (srv *Service) UpdateRespons(vacancyId int64, updateRespons autogen.Response) (bool, error) {
-	return srv.db.UpdateResponses(vacancyId, updateRespons)
-}
-
-func (srv *Service) GetResponsesByChatIDEmployer(chatIdEmployer int64) ([]autogen.Response, error) {
-	return srv.db.GetResponsesByChatIDEmployer(chatIdEmployer)
-}
-
-func (srv *Service) GetResponsesByChatID(chatId int64) ([]autogen.Response, error) {
-	return srv.db.GetResponsesByChatID(chatId)
-}
-
-func (srv *Service) GetResponsesByVacancyIDAndChatID(vacancyId int64, chatId int64) (*autogen.Response, error) {
-	return srv.db.GetResponsesByVacancyIDAndChatID(vacancyId, chatId)
-}
-
-func (srv *Service) GetResponsesByVacancyID(vacancyId int64) ([]autogen.Response, error) {
-	return srv.db.GetResponsesByVacancyID(vacancyId)
+func (srv *Service) UpdateResponse(response_id int, updateRespons models.Response) (bool, error) {
+	return srv.db.UpdateResponses(response_id, updateRespons)
 }

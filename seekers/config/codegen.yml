@@ -1,0 +1,4 @@
+package: server
+generate:
+  chi-server: true
+output: seekers/autogen/server/interface.go

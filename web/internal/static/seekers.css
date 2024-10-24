@@ -1,0 +1,134 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+/* Стили для хедера */
+.header {
+    background-color: white;
+    color: #007bff;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    border-bottom-left-radius: 20px; /* Скругленные края снизу */
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header nav {
+    display: flex;
+    flex-wrap: wrap; /* Добавляем возможность переноса кнопок на малых экранах */
+    justify-content: center;
+}
+
+.header button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.header button:hover {
+    background-color: #0056b3;
+}
+
+/* Основной контент */
+.container {
+    padding: 20px;
+    text-align: center;
+}
+
+.container h2 {
+    margin-bottom: 20px;
+}
+
+.container button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.container button:hover {
+    background-color: #0056b3;
+}
+
+/* Медиа-запросы для адаптивности */
+
+/* Для устройств с шириной экрана до 768px (планшеты) */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .header nav {
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .header button {
+        width: 100%; /* Кнопки занимают 100% ширины */
+        margin: 10px 0;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .container button {
+        width: 100%; /* Кнопки занимают всю ширину */
+    }
+}
+
+/* Для мобильных устройств с шириной экрана до 480px (смартфоны) */
+@media (max-width: 480px) {
+    .header {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 18px; /* Уменьшаем размер текста для лучшего отображения */
+    }
+
+    .header nav {
+        flex-direction: column; /* Кнопки в одну колонку */
+    }
+
+    .header button {
+        width: 100%; /* Кнопки на всю ширину */
+        margin: 5px 0;
+        font-size: 14px; /* Немного уменьшаем текст */
+        padding: 10px; /* Корректируем отступы */
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .container h2 {
+        font-size: 18px; /* Уменьшаем текст */
+    }
+
+    .container button {
+        width: 100%; /* Кнопка на всю ширину */
+        padding: 10px;
+    }
+}

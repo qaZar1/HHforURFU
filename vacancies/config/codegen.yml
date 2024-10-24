@@ -1,0 +1,4 @@
+package: server
+generate:
+  chi-server: true
+output: vacancies/autogen/server/interface.go

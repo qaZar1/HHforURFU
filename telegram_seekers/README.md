@@ -1,1 +1,0 @@
-#### VaaS Telegram API

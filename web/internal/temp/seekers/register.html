@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/register.css">
+    <title>Регистрация</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Регистрация</h2>
+        <form id="registerForm" method="POST" action="/submit">
+            <input type="text" placeholder="Имя" id="name" name="name" required>
+            <input type="text" placeholder="Никнейм" id="username" name="username" required>
+            <input type="password" placeholder="Пароль" id="password" name="password" required>
+            <input type="url" placeholder="Ссылка на резюме" id="resume" name="resume">
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    </div>
+    <div name="error-message"></div>
+        <h1>Ошибка регистрации. Попробуйте еще раз.</h1>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Собираем данные из формы
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            const resume = document.getElementById('resume').value;
+
+            // Создаем объект FormData для отправки данных на сервер
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('name', name); 
+            formData.append('resume', resume);  // предполагается, что пароль уже хэширован
+
+            try {
+                // Отправляем данные на сервер через Fetch API
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Если сервер вернул успешный ответ, перенаправляем на /
+                    window.location.href = '/login';
+                } else {
+                    // Если произошла ошибка, показываем сообщение
+                    document.getElementsByName('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка отправки данных:', error);
+                document.getElementsByName('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

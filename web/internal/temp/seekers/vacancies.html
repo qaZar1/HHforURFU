@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вакансии</title>
+    <link rel="stylesheet" type="text/css" href="/static/vacancies.css">
+</head>
+<body>
+    <!-- Хедер с названием сайта и кнопками -->
+    <div class="header">
+        <h1 onclick="window.location.href='/home'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='employers'">Сайт для работодателей</button>
+            <button onclick="window.location.href='/vacancies'">Вакансии</button>
+            <button onclick="window.location.href='/responses'">Мои отклики</button>
+        </nav>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <!-- Фильтры и поиск -->
+        <div class="filters">
+            <h2>Фильтры</h2>
+            <div class="filter-item">
+                <label for="search">Поиск:</label>
+                <input type="text" id="search" placeholder="Введите название вакансии...">
+            </div>
+            <div class="filter-item">
+                <label for="category">Категория:</label>
+                <select id="category">
+                    <option value="">Все</option>
+                    <option value="Полный день">Полный день</option>
+                    <option value="Неполный день">Неполный день</option>
+                    <option value="Временная работа">Временная работа</option>   
+                    <option value="Стажировка">Стажировка</option>
+                    <option value="От 4 часов в день">От 4 часов в день</option>
+                    <option value="Удаленная работа">Удаленная работа</option>
+                    <option value="Гибкий график">Гибкий график</option>
+                </select>
+            </div>
+            <button class="filter-button">Применить фильтры</button>
+        </div>
+
+        <!-- Список вакансий -->
+        <div class="vacancy-list">
+            <h2 class="available-vacancy">Доступные вакансии</h2>
+           
+            {{ range .Vacancies }}
+                <div class="vacancy-item" onclick="window.location.href='/vacancy/id-{{ .ID }}'">
+                    <h3 id="title">Вакансия:  {{ .Title }}</h3>
+                    <p id="company"><strong>Компания:</strong> {{ .Company }}</p>
+                    <p><strong>Статус:</strong> {{ .Status }}</p>
+                    <p><strong>Описание:</strong> {{ .Description }}</p>
+                    <div class="tag-container"> <!-- Блок для тегов -->
+                        {{ range .Tags }} <!-- Итерация по тегам -->
+                            <span class="tag">{{ . }}</span> <!-- Отображение каждого тега -->
+                        {{ end }}
+                    </div>
+                </div>
+            {{ end }}
+        </div>
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/auth.js'; // Путь к вашему файлу auth.js
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken(); // Проверка токена при загрузке страницы
+
+            // Устанавливаем текущие фильтры при загрузке страницы
+            setFiltersFromUrl();
+
+            // Обработчик нажатия на кнопку "Применить фильтры"
+            document.querySelector('.filter-button').addEventListener('click', applyFilters);
+        });
+
+        // Применение фильтров
+        function applyFilters() {
+            const searchQuery = document.getElementById('search').value;
+            const category = document.getElementById('category').value;
+
+            // Собираем параметры для запроса
+            const params = new URLSearchParams({
+                search: searchQuery,
+                category: category,
+            });
+
+            // Обновляем URL с фильтрами (GET параметры)
+            window.location.href = `/vacancies?${params.toString()}`;
+        }
+
+        // Функция для установки значений фильтров из URL
+        function setFiltersFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const searchQuery = params.get('search');
+            const category = params.get('category');
+
+            // Устанавливаем поисковый запрос, если он есть в URL
+            if (searchQuery) {
+                document.getElementById('search').value = searchQuery;
+            }
+
+            // Устанавливаем категорию, если она есть в URL
+            if (category) {
+                document.getElementById('category').value = category;
+            }
+        }
+    </script>
+</body>
+</html>

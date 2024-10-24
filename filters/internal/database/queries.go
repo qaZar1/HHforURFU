@@ -5,7 +5,7 @@ import (
 
 	_ "github.com/Impisigmatus/service_core/postgres"
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/filters/autogen"
+	"github.com/qaZar1/HHforURFU/filters/internal/models"
 )
 
 type Database struct {
@@ -18,10 +18,10 @@ func NewDatabase(db *sqlx.DB) *Database {
 	}
 }
 
-func (pg *Database) GetAllFilters() ([]autogen.Info, error) {
-	const query = "SELECT vacancy_id, tags FROM main.filters;"
+func (pg *Database) GetAllFilters() ([]models.Tag, error) {
+	const query = "SELECT vacancy_id, tag FROM main.filters;"
 
-	var vacancies []autogen.Info
+	var vacancies []models.Tag
 	if err := pg.db.Select(&vacancies, query); err != nil {
 		return nil, fmt.Errorf("Invalid SELECT main.filters: %s", err)
 	}
@@ -29,25 +29,25 @@ func (pg *Database) GetAllFilters() ([]autogen.Info, error) {
 	return vacancies, nil
 }
 
-func (pg *Database) GetFiltersByVacancyID(vacancyId int64) (*[]autogen.Info, error) {
-	const query = "SELECT vacancy_id, tags FROM main.filters WHERE vacancy_id = $1;"
+func (pg *Database) GetFiltersByVacancyID(vacancyId int64) ([]models.Tag, error) {
+	const query = "SELECT vacancy_id, tag FROM main.filters WHERE vacancy_id = $1;"
 
-	var vacancy []autogen.Info
+	var vacancy []models.Tag
 	if err := pg.db.Select(&vacancy, query, vacancyId); err != nil {
 		return nil, fmt.Errorf("User does not exist in main.filters: %w", err)
 	}
 
-	return &vacancy, nil
+	return vacancy, nil
 }
 
-func (pg *Database) AddFilters(vacancy autogen.Filters) error {
+func (pg *Database) AddFilters(vacancy models.Tag) error {
 	const query = `
 INSERT INTO main.filters (
 	vacancy_id,
-	tags
+	tag
 ) VALUES (
-	:vacancyid,
-	:tags
+	:vacancy_id,
+	:tag
 );`
 
 	if _, err := pg.db.NamedExec(query, vacancy); err != nil {

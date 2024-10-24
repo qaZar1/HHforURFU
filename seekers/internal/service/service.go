@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/seekers/autogen"
 	"github.com/qaZar1/HHforURFU/seekers/internal/database"
+	"github.com/qaZar1/HHforURFU/seekers/internal/models"
 )
 
 type Service struct {
@@ -16,22 +16,22 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
-func (srv *Service) GetAllUsers() ([]autogen.Info, error) {
-	return srv.db.GetAllUsers()
+func (srv *Service) RegisterSeeker(seeker models.Seeker) (bool, error) {
+	return srv.db.AddSeeker(seeker)
 }
 
-func (srv *Service) GetUserByChatID(chatId int64) (*autogen.Info, error) {
-	return srv.db.GetUserByChatID(chatId)
+func (srv *Service) CheckSeekerUsername(username string) (models.Seeker, error) {
+	return srv.db.CheckSeekerUsername(username)
 }
 
-func (srv *Service) AddUser(user autogen.User) error {
-	return srv.db.AddUser(user)
-}
+// func (srv *Service) AddVacancy(vacancy autogen.Vacancy) (int64, error) {
+// 	return srv.db.AddVacancy(vacancy)
+// }
 
-func (srv *Service) RemoveUser(chatId int64) (bool, error) {
-	return srv.db.RemoveUser(chatId)
-}
+// func (srv *Service) RemoveVacancy(vacancyId int64) (bool, error) {
+// 	return srv.db.RemoveVacancy(vacancyId)
+// }
 
-func (srv *Service) UpdateUser(chatId int64, updateUser autogen.UpdateUser) (bool, error) {
-	return srv.db.UpdateUser(chatId, updateUser)
-}
+// func (srv *Service) UpdateVacancy(vacancyId int64, updateVacancy autogen.UpdateVacancy) (bool, error) {
+// 	return srv.db.UpdateVacancy(vacancyId, updateVacancy)
+// }

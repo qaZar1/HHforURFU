@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/responses.css">
+    <title>Отклики</title>
+</head>
+<body>
+    <div class="header">
+        <h1 onclick="window.location.href='/employers'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='/home'">Сайт для соискателей</button>
+            <button onclick="window.location.href='/employers/responses'">Отклики</button>
+            <button onclick="window.location.href='/employers/vacancies'">Мои Вакансии</button>
+        </nav>
+    </div>
+
+    <div class="container">
+        {{ if .Responses }}
+            <h2>Ваши отклики</h2>
+            {{ range .Responses }}
+                <div class="response">
+                    <div class="response-content">
+                        <h3>Отклик на вакансию: {{ .Title}}</h3>
+                        <p>Компания: {{ .Company }}</p>
+                        <p>Описание вакансии: {{ .Description }}</p>
+                        <p>Статус отклика: {{ .Status }}</p>
+                        <div class="tag-container">
+                            {{ range .Tags }}
+                                <span class="tag">{{ . }}</span>
+                            {{ end }}
+                        </div>
+                    </div>
+                    <button onclick="window.location.href='/employers/response/id-{{ .RespID }}'">Открыть отклик</button>
+                </div>
+            {{ end }}
+        {{ else }}
+            <h2>Нет доступных откликов</h2>
+        {{ end }}
+    </div>
+    <script type="module">
+        import { checkToken } from '/static/js/authEmployers.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/vacancy.css">
+    <title>Подробная информация об отклике</title>
+</head>
+<body>
+    <!-- Хедер с названием сайта и кнопками -->
+    <div class="header">
+        <h1 onclick="window.location.href='/home'">HHforURFU</h1>
+        <nav>
+            <button onclick="window.location.href='employers'">Сайт для работодателей</button>
+            <button onclick="window.location.href='/vacancies'">Вакансии</button>
+            <button onclick="window.location.href='/responses'">Мои отклики</button>
+        </nav>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <div class="vacancy-details">
+            <h2>Вакансия: {{ .Vacancy.Title }}</h2>
+            <p><strong>Компания:</strong> {{ .Vacancy.Company }}</p>
+            <p><strong>Статус:</strong> {{ .Vacancy.Status }}</p>
+            <p><strong>Описание:</strong> {{ .Vacancy.Description }}</p>
+            <div class="tag-container"> <!-- Блок для тегов -->
+                {{ range .Vacancy.Tags }} <!-- Итерация по тегам -->
+                    <span class="tag">{{ . }}</span> <!-- Отображение каждого тега -->
+                {{ end }}
+            </div>
+        </div>
+        <div class="button-container">
+            <button id="accept" class="accept" method="POST" action="/acceptVacancy">Откликнуться</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Функция для получения значения из cookie
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            if (match) return match[2];
+            return null;
+        }
+
+        // Получаем username из cookie
+        const username = getCookie('username');
+
+        // Получаем vacancyID и employerID, которые подаются в HTML через chi
+        const vacancyID = "{{ .Vacancy.ID }}";  // Chi-шаблон подает данные
+        const employerID = "{{ .Vacancy.EmployerID }}";
+
+            document.getElementById('accept').addEventListener('click', async function(event) {
+                event.preventDefault();
+
+                const formData = new FormData();
+                formData.append('username', username);    // Добавляем username
+                formData.append('vacancyID', vacancyID);  // Добавляем vacancyID
+                formData.append('employerID', employerID); 
+
+                
+
+                try {
+                    // Отправляем данные на сервер через Fetch API
+                    const response = await fetch('/acceptVacancy', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        // Перенаправляем на домашнюю страницу
+                        window.location.href = '/vacancies';
+                    } else {
+                        // Если произошла ошибка, показываем сообщение
+                        document.getElementById('error-message').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Ошибка отправки данных:', error);
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            });
+        });
+    </script>
+    <script type="module">
+        import { checkToken } from '/static/js/auth.js'; // Путь к вашему файлу auth.js
+        document.addEventListener('DOMContentLoaded', () => {
+            checkToken(); // Проверка токена при загрузке страницы
+        });
+    </script>
+</body>
+</html>

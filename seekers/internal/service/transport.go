@@ -1,126 +1,136 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/Impisigmatus/service_core/utils"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/qaZar1/HHforURFU/seekers/autogen"
+	"github.com/qaZar1/HHforURFU/seekers/autogen/server"
+	"github.com/qaZar1/HHforURFU/seekers/internal/infrastructure"
+	"github.com/qaZar1/HHforURFU/seekers/internal/models"
+	_ "github.com/swaggo/swag"
 )
 
 type Transport struct {
-	srv *Service
+	srv      *Service
+	infra    *infrastructure.Infrastructure
+	validate *validator.Validate
 }
 
-func NewTransport(db *sqlx.DB) autogen.ServerInterface {
+func NewTransport(db *sqlx.DB, expiresIn int) server.ServerInterface {
 	return &Transport{
-		srv: NewService(db),
+		srv:      NewService(db),
+		infra:    infrastructure.New(expiresIn),
+		validate: validator.New(),
 	}
 }
 
-// Добавление нового юзера в БД
-// (POST /api/seekers/add)
-func (transport *Transport) PostApiSeekersAdd(w http.ResponseWriter, r *http.Request) {
-	data, err := io.ReadAll(r.Body)
+// Set godoc
+//
+// @Router /api/registerSeeker [post]
+// @Summary Регистрация соискателя
+// @Description При обращении, регистрируется соискатель
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Param	request	body	seeker	true	"Данные о пользователе"
+//
+// @Success 204 {object} nil "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) PostApiRegisterSeeker(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
-	var user autogen.User
-	if err := jsoniter.Unmarshal(data, &user); err != nil {
-		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
+	var seeker models.Seeker
+	if err := jsoniter.Unmarshal(body, &seeker); err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Can not unmarshal body")
 		return
 	}
 
-	if err := transport.srv.db.AddUser(user); err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось добавить пользователя")
+	ok, err := transport.srv.RegisterSeeker(seeker)
+	if err != nil {
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
+		return
+	}
+
+	if !ok {
+		utils.WriteString(w, http.StatusBadRequest, err, "Данный пользователь уже существует!")
 		return
 	}
 
 	utils.WriteNoContent(w)
 }
 
-// Удаление пользователя из БД
-// (DELETE /api/seekers/{chat_id}/remove)
-func (transport *Transport) DeleteApiSeekersChatIdRemove(w http.ResponseWriter, r *http.Request, chatId int64) {
-	ok, err := transport.srv.RemoveUser(chatId)
+// Set godoc
+//
+// @Router /api/checkSeeker/{username} [get]
+// @Summary Проверка, существует ли пользователь
+// @Description При обращении, регистрируется соискатель
+//
+// @Tags APIs
+// @Accept       application/json
+// @Produce      application/json
+//
+// @Param	username	path	string	true	"Username пользователя"
+//
+// @Success 200 {object} seeker "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiCheckSeekerUsername(w http.ResponseWriter, r *http.Request, username string) {
+	seeker, err := transport.srv.CheckSeekerUsername(username)
 	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Пользователя не существует")
+		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить данные")
 		return
 	}
 
-	if ok {
-		utils.WriteString(w, http.StatusOK, nil, "Пользователя не существует")
-		return
-	} else {
-		utils.WriteNoContent(w)
-		return
-	}
+	utils.WriteObject(w, seeker)
 }
 
-// Получение данных пользователя по chat_id
-// (GET /api/seekers/{chat_id}/get)
-func (transport *Transport) GetApiSeekersChatIdGet(w http.ResponseWriter, r *http.Request, chatId int64) {
-	user, err := transport.srv.GetUserByChatID(chatId)
+// Set godoc
+//
+// @Router /api/login [get]
+// @Summary Получение токена
+// @Description Генерирует JWT токен
+//
+// @Tags Authentication
+//
+// @Produce application/json
+//
+// @Success 200 {object} token_response "Запрос выполнен успешно"
+// @Failure 400 {object} nil "Ошибка валидации данных"
+// @Failure 401 {object} nil "Ошибка авторизации"
+// @Failure 500 {object} nil "Произошла внутренняя ошибка сервера"
+func (transport *Transport) GetApiLogin(w http.ResponseWriter, r *http.Request) {
+	username, _, _ := r.BasicAuth()
+	payload := models.Payload{
+		Username: username,
+	}
+	if err := transport.validate.Struct(payload); err != nil {
+		utils.WriteString(w, http.StatusBadRequest, err, "invalid request")
+		return
+	}
+
+	claims := transport.infra.GetClaims(payload.Username)
+	signed, err := transport.infra.GetSignedToken(claims)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteNoContent(w)
-			return
-		}
-
-		utils.WriteString(w, http.StatusNoContent, err, "Не удалось получить пользователя")
+		utils.WriteString(w, http.StatusInternalServerError, err, "invalid token")
 		return
 	}
 
-	utils.WriteObject(w, user)
-}
-
-// Получение всех пользователей из БД
-// (GET /api/seekers/get)
-func (transport *Transport) GetApiSeekersGet(w http.ResponseWriter, r *http.Request) {
-	users, err := transport.srv.GetAllUsers()
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось получить пользователей")
-		return
-	}
-	if len(users) == 0 {
-		utils.WriteString(w, http.StatusInternalServerError, err, "В базе нет пользователей")
-		return
-	}
-
-	utils.WriteObject(w, users)
-}
-
-func (transport *Transport) PutApiSeekersChatIdUpdate(w http.ResponseWriter, r *http.Request, chatId int64) {
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, fmt.Errorf("Invalid read body: %s", err), "Не удалось прочитать тело запроса")
-		return
-	}
-
-	var updateUser autogen.UpdateUser
-	if err := jsoniter.Unmarshal(data, &updateUser); err != nil {
-		utils.WriteString(w, http.StatusBadRequest, fmt.Errorf("Invalid parse body: %s", err), "Не удалось распарсить тело запроса формата JSON")
-		return
-	}
-
-	ok, err := transport.srv.UpdateUser(chatId, updateUser)
-	if err != nil {
-		utils.WriteString(w, http.StatusInternalServerError, err, "Не удалось обновить данные пользователя")
-		return
-	}
-
-	if ok {
-		utils.WriteString(w, http.StatusOK, nil, "Невозможно обновить данные о пользователе")
-		return
-	} else {
-		utils.WriteNoContent(w)
-		return
-	}
+	utils.WriteObject(w, &models.TokenResponse{
+		AccessToken: signed,
+		ExpiresIn:   18000,
+		TokenType:   "Bearer",
+	})
 }

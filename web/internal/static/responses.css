@@ -1,0 +1,171 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+/* Стили для хедера */
+.header {
+    background-color: white;
+    color: #007bff;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    border-bottom-left-radius: 20px; /* Скругленные края снизу */
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header nav {
+    display: flex;
+    flex-wrap: wrap; /* Добавляем возможность переноса кнопок на малых экранах */
+    justify-content: center;
+}
+
+.header button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.header button:hover {
+    background-color: #0056b3;
+}
+
+/* Основной контент */
+.container {
+    padding: 20px;
+    text-align: center;
+}
+
+.container h2 {
+    margin-bottom: 20px;
+}
+
+.response {
+    background-color: white;
+    margin: 10px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    max-width: 800px;
+    display: flex; /* Используем Flexbox */
+    justify-content: space-between; /* Распределяем контент по краям */
+    align-items: center; /* Вертикальное выравнивание */
+}
+
+.response h3 {
+    margin: 0 0 10px;
+}
+
+.response p {
+    margin: 5px 0;
+}
+
+.response-content {
+    flex: 1; /* Контент будет занимать всё доступное пространство */
+}
+
+.response button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 20px; /* Отступ между текстом и кнопкой */
+}
+
+.response button:hover {
+    background-color: #0056b3;
+}
+
+.tag-container {
+    display: flex;
+    flex-wrap: wrap; /* Чтобы теги автоматически переносились на новую строку при нехватке места */
+    gap: 10px; /* Отступы между тегами */
+    margin-top: 10px;
+}
+
+.tag {
+    background-color: #e0f7ff; /* Светло-синий цвет */
+    color: #0056b3; /* Цвет текста (более темный синий) */
+    padding: 8px 15px; /* Внутренние отступы для тегов */
+    border-radius: 20px; /* Сильно скругленные края */
+    font-size: 0.9em; /* Размер текста немного меньше стандартного */
+    display: inline-block; /* Тег занимает минимальное место */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Небольшая тень для визуального выделения */
+    cursor: default; /* Курсор в виде указателя при наведении */
+    transition: background-color 0.3s ease; /* Анимация при изменении цвета */
+}
+
+/* Медиа-запросы для адаптивности */
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .header nav {
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .header button {
+        width: 100%; /* Кнопки занимают 100% ширины */
+        margin: 10px 0;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .response {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .header nav {
+        flex-direction: column;
+    }
+
+    .header button {
+        width: 100%;
+        margin: 5px 0;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .response {
+        padding: 10px;
+    }
+}

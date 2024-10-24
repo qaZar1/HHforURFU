@@ -1,0 +1,4 @@
+package: server
+generate:
+  chi-server: true
+output: employers/autogen/server/interface.go

@@ -5,7 +5,7 @@ import (
 
 	_ "github.com/Impisigmatus/service_core/postgres"
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/seekers/autogen"
+	"github.com/qaZar1/HHforURFU/seekers/internal/models"
 )
 
 type Database struct {
@@ -18,85 +18,121 @@ func NewDatabase(db *sqlx.DB) *Database {
 	}
 }
 
-func (pg *Database) GetAllUsers() ([]autogen.Info, error) {
-	const query = "SELECT chat_id, nickname, f_name, s_name, resume FROM main.seekers;"
-
-	var users []autogen.Info
-	if err := pg.db.Select(&users, query); err != nil {
-		return nil, fmt.Errorf("Invalid SELECT main.seekers: %s", err)
-	}
-
-	return users, nil
-}
-
-func (pg *Database) GetUserByChatID(chatId int64) (*autogen.Info, error) {
-	const query = "SELECT chat_id, nickname, f_name, s_name, resume FROM main.seekers WHERE chat_id = $1;"
-
-	var users autogen.Info
-	if err := pg.db.Get(&users, query, chatId); err != nil {
-		return nil, fmt.Errorf("User does not exist in main.seekers: %w", err)
-	}
-
-	return &users, nil
-}
-
-func (pg *Database) AddUser(user autogen.User) error {
+func (pg *Database) AddSeeker(seeker models.Seeker) (bool, error) {
 	const query = `
 INSERT INTO main.seekers (
-	chat_id,
-	nickname,
+	username,
 	f_name,
-	s_name,
+	password_hash,
 	resume
 ) VALUES (
-	:chatid,
-	:nickname,
-	:fname,
-	:sname,
+	:username,
+	:f_name,
+	:password_hash,
 	:resume
-) ON CONFLICT (chat_id) DO NOTHING;`
+) ON CONFLICT (username) DO NOTHING;`
 
-	if _, err := pg.db.NamedExec(query, user); err != nil {
-		return fmt.Errorf("Invalid INSERT INTO main.seekers: %s", err)
+	result, err := pg.db.NamedExec(query, seeker)
+	if err != nil {
+		return false, fmt.Errorf("Invalid INSERT INTO main.seekers: %s", err)
 	}
 
-	return nil
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("Invalid INSERT INTO main.seekers: %s", err)
+	}
+
+	return affected == 1, nil
 }
 
-func (pg *Database) RemoveUser(chatId int64) (bool, error) {
-	const query = "DELETE FROM main.seekers WHERE chat_id = $1"
+func (pg *Database) CheckSeekerUsername(username string) (models.Seeker, error) {
+	const query = "SELECT id, username, f_name, password_hash, resume FROM main.seekers WHERE username = $1;"
 
-	exec, err := pg.db.Exec(query, chatId)
-	if err != nil {
-		return false, fmt.Errorf("Invalid DELETE main.seekers: %s", err)
+	var seeker models.Seeker
+	if err := pg.db.Get(&seeker, query, username); err != nil {
+		return models.Seeker{}, fmt.Errorf("User does not exist in main.seekers: %w", err)
 	}
 
-	affected, err := exec.RowsAffected()
-	if err != nil {
-		return false, fmt.Errorf("Invalid affected seekers: %s", err)
-	}
-
-	return affected == 0, nil
+	return seeker, nil
 }
 
-func (pg *Database) UpdateUser(chat_id int64, updateUser autogen.UpdateUser) (bool, error) {
-	const query = `
-UPDATE main.seekers
-SET nickname = :nickname,
-	f_name = :f_name,
-	s_name = :s_name,
-	resume = :resume
-WHERE chat_id = :chat_id;`
+// func (pg *Database) GetAllVacancies() ([]models.Vacancy, error) {
+// 	const query = `
+// 	SELECT vacancy_id, company, title, description, employer_id, status
+// 	FROM main.vacancies
+// 	ORDER BY
+//     CASE
+//         WHEN status = 'Открыта' THEN 1
+//         ELSE 2
+//     END,
+//     vacancy_id DESC;`
 
-	exec, err := pg.db.NamedExec(query, updateUser)
-	if err != nil {
-		return false, fmt.Errorf("Invalid UPDATE main.versions: %s", err)
-	}
+// 	var vacancies []models.Vacancy
+// 	if err := pg.db.Select(&vacancies, query); err != nil {
+// 		return nil, fmt.Errorf("Invalid SELECT main.vacancies: %s", err)
+// 	}
 
-	affected, err := exec.RowsAffected()
-	if err != nil {
-		return false, fmt.Errorf("Invalid affected description: %s", err)
-	}
+// 	return vacancies, nil
+// }
 
-	return affected == 0, nil
-}
+// func (pg *Database) AddVacancy(vacancy autogen.Vacancy) (int64, error) {
+// 	const query = `
+// INSERT INTO main.vacancies (
+// 	company,
+// 	title,
+// 	description,
+// 	chat_id_employer
+// ) VALUES (
+// 	$1,
+// 	$2,
+// 	$3,
+// 	$4
+// ) ON CONFLICT (vacancy_id) DO NOTHING
+// RETURNING vacancy_id;`
+
+// 	var vacancy_id int64
+// 	err := pg.db.QueryRowx(query, vacancy.Company, vacancy.Title, vacancy.Description, vacancy.ChatIdEmployer).Scan(&vacancy_id)
+// 	if err != nil {
+// 		return 0, fmt.Errorf("Invalid INSERT INTO main.vacancies: %s", err)
+// 	}
+
+// 	return vacancy_id, nil
+// }
+
+// func (pg *Database) RemoveVacancy(vacancyId int64) (bool, error) {
+// 	const query = "DELETE FROM main.vacancies WHERE vacancy_id = $1"
+
+// 	exec, err := pg.db.Exec(query, vacancyId)
+// 	if err != nil {
+// 		return false, fmt.Errorf("Invalid DELETE main.vacancies: %s", err)
+// 	}
+
+// 	affected, err := exec.RowsAffected()
+// 	if err != nil {
+// 		return false, fmt.Errorf("Invalid affected vacancies: %s", err)
+// 	}
+
+// 	return affected == 0, nil
+// }
+
+// func (pg *Database) UpdateVacancy(vacancyId int64, updateVacancy autogen.UpdateVacancy) (bool, error) {
+// 	const query = `
+// UPDATE main.vacancies
+// SET	company = :company
+// 	title = :title,
+// 	description = :description
+// 	chat_id_employer = :chatIdEmployer
+// WHERE vacancy_id = :vacancy_id;`
+
+// 	exec, err := pg.db.NamedExec(query, updateVacancy)
+// 	if err != nil {
+// 		return false, fmt.Errorf("Invalid UPDATE main.vacancies: %s", err)
+// 	}
+
+// 	affected, err := exec.RowsAffected()
+// 	if err != nil {
+// 		return false, fmt.Errorf("Invalid affected description: %s", err)
+// 	}
+
+// 	return affected == 0, nil
+// }

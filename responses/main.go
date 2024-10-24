@@ -14,10 +14,12 @@ import (
 
 	"github.com/Impisigmatus/service_core/middlewares"
 	"github.com/Impisigmatus/service_core/postgres"
+	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
-	"github.com/qaZar1/HHforURFU/responses/autogen"
+	"github.com/qaZar1/HHforURFU/responses/autogen/server"
 	"github.com/qaZar1/HHforURFU/responses/internal/service"
 	"github.com/sirupsen/logrus"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func init() {
@@ -32,6 +34,11 @@ func init() {
 	})
 }
 
+// @title Authentication API
+// @version 2.0
+// @description %README_FILE%
+// @host localhost:8003
+// @BasePath /api
 func main() {
 	const (
 		base       = 10
@@ -51,27 +58,30 @@ func main() {
 	}
 
 	transport := service.NewTransport(
-		service.NewService(
-			sqlx.NewDb(
-				postgres.NewPostgres(
-					postgres.Config{
-						Hostname: os.Getenv(pgHost),
-						Port:     port,
-						Database: os.Getenv(pgDB),
-						User:     os.Getenv(pgUser),
-						Password: os.Getenv(pgPassword),
-					},
-				), "pgx")))
+		sqlx.NewDb(
+			postgres.NewPostgres(
+				postgres.Config{
+					Hostname: os.Getenv(pgHost),
+					Port:     port,
+					Database: os.Getenv(pgDB),
+					User:     os.Getenv(pgUser),
+					Password: os.Getenv(pgPassword),
+				},
+			), "pgx"),
+	)
 
-	router := http.NewServeMux()
-	router.Handle("/api/",
-		middlewares.Use(middlewares.Use(autogen.Handler(transport),
-			middlewares.Authorization(strings.Split(os.Getenv(auth), ","))),
+	router := chi.NewRouter()
+	router.Handle("/api/*",
+		middlewares.Use(
+			middlewares.Use(
+				server.Handler(transport),
+				middlewares.Authorization(strings.Split(os.Getenv(auth), ",")),
+			),
 			middlewares.Logger(),
 		),
 	)
+	router.Get("/swagger/*", httpSwagger.Handler())
 
-	// router.Get("/swagger/*", httpSwagger.Handler())
 	server := &http.Server{
 		Addr:    os.Getenv(address),
 		Handler: router,

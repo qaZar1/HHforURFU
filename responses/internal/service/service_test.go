@@ -1,209 +1,235 @@
 package service_test
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/qaZar1/HHforURFU/responses/autogen"
 	"github.com/qaZar1/HHforURFU/responses/internal/mocks"
-	"github.com/qaZar1/HHforURFU/responses/internal/service"
+	"github.com/qaZar1/HHforURFU/responses/internal/models"
+	assert "github.com/stretchr/testify/assert"
 )
 
-func TestGetApiResponsesGet(t *testing.T) {
+func TestGetResponsesByUsername(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
+	username := "test_user"
 
-	expectedResponses := []autogen.Response{{ /* инициализация полей */ }}
-	mockService.EXPECT().GetAllResponses().Return(expectedResponses, nil).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/responses/get", nil)
-	w := httptest.NewRecorder()
-
-	transport.GetApiResponsesGet(w, req)
-
-	res := w.Result()
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected status 200, got %d", res.StatusCode)
+	expectedResponses := []models.Response{
+		{
+			RespID:     1,
+			VacancyID:  2,
+			EmployerID: 3,
+			Username:   "test_user",
+			Status:     "status",
+		},
 	}
 
-	var responses []autogen.Response
-	json.NewDecoder(res.Body).Decode(&responses)
-	if len(responses) != len(expectedResponses) {
-		t.Errorf("expected %d responses, got %d", len(expectedResponses), len(responses))
-	}
+	t.Run("Success", func(t *testing.T) {
+		// Определяем поведение мока
+		mockService.EXPECT().
+			GetResponsesByUsername(username).
+			Return(expectedResponses, nil)
+
+		// Вызываем метод
+		resp, err := mockService.GetResponsesByUsername(username)
+
+		// Проверяем результат
+		assert.NoError(t, err)
+		assert.Equal(t, expectedResponses, resp)
+	})
+
+	t.Run("No Responses", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponsesByUsername(username).
+			Return([]models.Response{}, nil)
+
+		resp, err := mockService.GetResponsesByUsername(username)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(resp))
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponsesByUsername(username).
+			Return(nil, errors.New("some error"))
+
+		resp, err := mockService.GetResponsesByUsername(username)
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+	})
 }
 
-func TestGetApiResponsesGet_Error(t *testing.T) {
+func TestAddResponses(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
-
-	mockService.EXPECT().GetAllResponses().Return(nil, fmt.Errorf("error")).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/responses/get", nil)
-	w := httptest.NewRecorder()
-
-	transport.GetApiResponsesGet(w, req)
-
-	res := w.Result()
-	if res.StatusCode != http.StatusInternalServerError {
-		t.Errorf("expected status 500, got %d", res.StatusCode)
+	newResponse := models.Response{
+		RespID:     1,
+		VacancyID:  2,
+		EmployerID: 3,
+		Username:   "test_user",
+		Status:     "status",
 	}
+
+	t.Run("Success", func(t *testing.T) {
+		mockService.EXPECT().
+			AddResponses(newResponse).
+			Return(nil)
+
+		err := mockService.AddResponses(newResponse)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		mockService.EXPECT().
+			AddResponses(newResponse).
+			Return(errors.New("insert error"))
+
+		err := mockService.AddResponses(newResponse)
+		assert.Error(t, err)
+	})
 }
 
-func TestPostApiResponsesAdd_Success(t *testing.T) {
+func TestGetResponseByID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
+	responseID := int64(1)
 
-	newResponse := autogen.Response{ /* инициализация полей */ }
-	mockService.EXPECT().AddResponses(newResponse).Return(nil).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	body, _ := json.Marshal(newResponse)
-	req := httptest.NewRequest(http.MethodPost, "/api/responses/add", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-
-	transport.PostApiResponsesAdd(w, req)
-
-	res := w.Result()
-	if res.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", res.StatusCode)
+	expectedResponse := models.Response{
+		RespID:     1,
+		VacancyID:  2,
+		EmployerID: 3,
+		Username:   "test_user",
+		Status:     "status",
 	}
+
+	t.Run("Success", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponseByID(responseID).
+			Return(expectedResponse, nil)
+
+		resp, err := mockService.GetResponseByID(responseID)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedResponse, resp)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponseByID(responseID).
+			Return(models.Response{}, sql.ErrNoRows)
+
+		resp, err := mockService.GetResponseByID(responseID)
+		assert.Error(t, err)
+		assert.Equal(t, models.Response{}, resp)
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponseByID(responseID).
+			Return(models.Response{}, errors.New("some error"))
+
+		resp, err := mockService.GetResponseByID(responseID)
+		assert.Error(t, err)
+		assert.Equal(t, models.Response{}, resp)
+	})
 }
 
-func TestPostApiResponsesAdd_Error(t *testing.T) {
+func TestGetResponsesByEmployersID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
+	employerID := int64(10)
 
-	newResponse := autogen.Response{ /* инициализация полей */ }
-	mockService.EXPECT().AddResponses(newResponse).Return(fmt.Errorf("error")).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	body, _ := json.Marshal(newResponse)
-	req := httptest.NewRequest(http.MethodPost, "/api/responses/add", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-
-	transport.PostApiResponsesAdd(w, req)
-
-	res := w.Result()
-	if res.StatusCode != http.StatusInternalServerError {
-		t.Errorf("expected status 500, got %d", res.StatusCode)
+	expectedResponses := []models.Response{
+		{
+			RespID:     1,
+			VacancyID:  2,
+			EmployerID: 3,
+			Username:   "test_user",
+			Status:     "status",
+		},
+		{
+			RespID:     2,
+			VacancyID:  3,
+			EmployerID: 4,
+			Username:   "test_user",
+			Status:     "status",
+		},
 	}
+
+	t.Run("Success", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponsesByEmployersID(employerID).
+			Return(expectedResponses, nil)
+
+		resp, err := mockService.GetResponsesByEmployersID(employerID)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedResponses, resp)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponsesByEmployersID(employerID).
+			Return([]models.Response{}, sql.ErrNoRows)
+
+		resp, err := mockService.GetResponsesByEmployersID(employerID)
+		assert.Error(t, err)
+		assert.Equal(t, 0, len(resp))
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		mockService.EXPECT().
+			GetResponsesByEmployersID(employerID).
+			Return(nil, errors.New("some error"))
+
+		resp, err := mockService.GetResponsesByEmployersID(employerID)
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+	})
 }
 
-func TestDeleteApiResponsesRemove_Success(t *testing.T) {
+func TestUpdateResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
 
-	mockService.EXPECT().RemoveResponses(int64(1)).Return(false, nil).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	req := httptest.NewRequest(http.MethodDelete, "/api/responses/1/remove", nil)
-	w := httptest.NewRecorder()
-
-	transport.DeleteApiResponsesVacancyIdRemove(w, req, int64(1))
-
-	res := w.Result()
-	if res.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", res.StatusCode)
+	// Данные для теста
+	responseID := 1
+	updateResponse := models.Response{
+		RespID:     2,
+		VacancyID:  3,
+		EmployerID: 4,
+		Username:   "test_user",
+		Status:     "status",
 	}
-}
 
-func TestDeleteApiResponsesRemove_UserNotFound(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// 1. Успешное обновление отклика
+	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(true, nil)
 
-	mockService := mocks.NewMockServiceInterface(ctrl)
+	ok, err := mockService.UpdateResponse(responseID, updateResponse)
+	assert.NoError(t, err)
+	assert.True(t, ok)
 
-	mockService.EXPECT().RemoveResponses(int64(1)).Return(false, sql.ErrNoRows).Times(1)
+	// 2. Отклик не найден
+	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(false, nil)
 
-	transport := service.NewTransport(mockService)
+	ok, err = mockService.UpdateResponse(responseID, updateResponse)
+	assert.NoError(t, err)
+	assert.False(t, ok)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/responses/1/remove", nil)
-	w := httptest.NewRecorder()
+	// 3. Ошибка при обновлении
+	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(true, errors.New("db error"))
 
-	transport.DeleteApiResponsesVacancyIdRemove(w, req, 1)
-
-	res := w.Result()
-	if res.StatusCode != http.StatusNotFound {
-		t.Errorf("expected status 404, got %d", res.StatusCode)
-	}
-}
-
-func TestPutApiResponsesUpdate_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockService := mocks.NewMockServiceInterface(ctrl)
-
-	updatedResponse := autogen.Response{
-		ChatId:         1,
-		ChatIdEmployer: 2,
-		Status:         "Успешно",
-		VacancyId:      3,
-	}
-	mockService.EXPECT().UpdateRespons(int64(1), updatedResponse).Return(false, nil).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	body, _ := json.Marshal(updatedResponse)
-	req := httptest.NewRequest(http.MethodPut, "/api/responses/1/update", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-
-	transport.PutApiResponsesVacancyIdUpdate(w, req, int64(1))
-
-	res := w.Result()
-	if res.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", res.StatusCode)
-	}
-}
-
-func TestPutApiResponsesUpdate_UserNotFound(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockService := mocks.NewMockServiceInterface(ctrl)
-
-	updatedResponse := autogen.Response{
-		ChatId:         1,
-		ChatIdEmployer: 2,
-		Status:         "Успешно",
-		VacancyId:      3,
-	}
-	mockService.EXPECT().UpdateRespons(int64(1), updatedResponse).Return(true, nil).Times(1)
-
-	transport := service.NewTransport(mockService)
-
-	body, _ := json.Marshal(updatedResponse)
-	req := httptest.NewRequest(http.MethodPut, "/api/responses/1/update", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-
-	transport.PutApiResponsesVacancyIdUpdate(w, req, int64(1))
-
-	res := w.Result()
-	if res.StatusCode != http.StatusNotFound {
-		t.Errorf("expected status 404, got %d", res.StatusCode)
-	}
+	ok, err = mockService.UpdateResponse(responseID, updateResponse)
+	assert.Error(t, err)
+	assert.False(t, ok)
 }
