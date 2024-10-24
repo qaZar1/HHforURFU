@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS main.employers (
     username        VARCHAR(32) NOT NULL UNIQUE,
     f_name          VARCHAR(64) NOT NULL,
     password_hash   TEXT        NOT NULL,
-    company         VARCHAR(64) NOT NULL UNIQUE
+    company         VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS main.vacancies (

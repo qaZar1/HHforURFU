@@ -202,7 +202,6 @@ func TestUpdateResponse(t *testing.T) {
 
 	mockService := mocks.NewMockServiceInterface(ctrl)
 
-	// Данные для теста
 	responseID := 1
 	updateResponse := models.Response{
 		RespID:     2,
@@ -212,21 +211,18 @@ func TestUpdateResponse(t *testing.T) {
 		Status:     "status",
 	}
 
-	// 1. Успешное обновление отклика
 	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(true, nil)
 
 	ok, err := mockService.UpdateResponse(responseID, updateResponse)
 	assert.NoError(t, err)
 	assert.True(t, ok)
 
-	// 2. Отклик не найден
 	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(false, nil)
 
 	ok, err = mockService.UpdateResponse(responseID, updateResponse)
 	assert.NoError(t, err)
 	assert.False(t, ok)
 
-	// 3. Ошибка при обновлении
 	mockService.EXPECT().UpdateResponse(responseID, updateResponse).Return(true, errors.New("db error"))
 
 	ok, err = mockService.UpdateResponse(responseID, updateResponse)
